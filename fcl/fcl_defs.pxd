@@ -1,6 +1,7 @@
 from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libcpp.set cimport set
 
 cdef extern from "Python.h":
        ctypedef struct PyObject
@@ -47,6 +48,39 @@ cdef extern from "fcl/math/transform.h" namespace "fcl":
         Transform3f(Matrix3f& R_, Vec3f& T_)
         Transform3f(Quaternion3f& q_, Vec3f& T_)
 
+cdef extern from "fcl/collision_data.h" namespace "fcl":
+    cdef cppclass Contact:
+        CollisionGeometry *o1
+        CollisionGeometry *o2
+        int b1
+        int b2
+        Vec3f normal
+        Vec3f pos
+        FCL_REAL penetration_depth
+        Contact() except +
+        Contact(CollisionGeometry* o1_,
+                CollisionGeometry* o2_,
+                int b1_, int b2_) except +
+    cdef cppclass CostSource:
+        Vec3f aabb_min
+        Vec3f aabb_max
+        FCL_REAL cost_density
+        FCL_REAL total_cost
+    cdef cppclass CollisionResult:
+        vector[Contact] contacts
+        set[CostSource] cost_sources
+    cdef cppclass CollisionRequest:
+        size_t num_max_contacts
+        bool enable_contact
+        size_t num_max_cost_sources
+        bool enable_cost
+        bool use_approximate_cost
+        CollisionRequest(size_t num_max_contacts_,
+                         bool enable_contact_,
+                         size_t num_max_cost_sources_,
+                         bool enable_cost_,
+                         bool use_approximate_cost_)
+
 cdef extern from "fcl/collision_object.h" namespace "fcl":
     cdef enum OBJECT_TYPE:
         OT_UNKNOWN, OT_BVH, OT_GEOM, OT_OCTREE, OT_COUNT
@@ -60,6 +94,11 @@ cdef extern from "fcl/collision_object.h" namespace "fcl":
         OBJECT_TYPE getObjectType()
         NODE_TYPE getNodeType()
         void computeLocalAABB()
+        Vec3f aabb_center
+        FCL_REAL aabb_radius
+        FCL_REAL cost_density
+        FCL_REAL threshold_occupied
+        FCL_REAL threshold_free
 
     cdef cppclass CollisionObject:
         CollisionObject() except +
@@ -103,7 +142,7 @@ cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
                int num_points_,
                int* polygons_) except +
 
-cdef extern from "fcl/broadphase.h" namespace "fcl":
+cdef extern from "fcl/broadphase/broadphase.h" namespace "fcl":
     ctypedef bool (*CollisionCallBack)(CollisionObject* o1, CollisionObject* o2, void* cdata)
     ctypedef bool (*DistanceCallBack)(CollisionObject* o1, CollisionObject* o2, void* cdata, FCL_REAL& dist)
 
@@ -120,3 +159,8 @@ cdef extern from "fcl/broadphase/broadphase_dynamic_AABB_tree.h" namespace "fcl"
         void clear()
         bool empty()
         size_t size()
+
+cdef extern from "fcl/collision.h" namespace "fcl":
+    size_t collide(CollisionObject* o1, CollisionObject* o2,
+                   CollisionRequest& request,
+                   CollisionResult& result)

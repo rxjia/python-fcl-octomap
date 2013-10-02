@@ -1,11 +1,15 @@
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libc.stdlib cimport free
+from libc.string cimport memcpy
 from cython.operator cimport dereference as deref, preincrement as inc, address
 cimport fcl_defs as defs
 import numpy as np
 cimport numpy as np
 ctypedef np.float64_t DOUBLE_t
+
+cdef vec3f_to_list(defs.Vec3f vec):
+    return [vec[idx] for idx in range(3)]
 
 cdef class Quaternion:
     cdef defs.Quaternion3f *thisptr
@@ -47,8 +51,8 @@ cdef class CollisionObject:
     def getNodeType(self):
         return self.thisptr.getNodeType()
 
-cdef class ShapeBase:
-    cdef defs.ShapeBase *thisptr
+cdef class CollisionGeometry:
+    cdef defs.CollisionGeometry *thisptr
     def __cinit__(self):
         pass
     def __dealloc__(self):
@@ -57,26 +61,42 @@ cdef class ShapeBase:
     def getNodeType(self):
         if self.thisptr:
             return self.thisptr.getNodeType()
+        else:
+            return None
     def computeLocalAABB(self):
         if self.thisptr:
             self.thisptr.computeLocalAABB()
+        else:
+            return None
+    property aabb_center:
+        def __get__(self):
+            if self.thisptr:
+                return vec3f_to_list(self.thisptr.aabb_center)
+            else:
+                return None
+        def __set__(self, value):
+            if self.thisptr:
+                self.thisptr.aabb_center[0] = value[0]
+                self.thisptr.aabb_center[1] = value[1]
+                self.thisptr.aabb_center[2] = value[2]
+            else:
+                raise ReferenceError
+
+cdef class ShapeBase(CollisionGeometry):
+    pass
 
 cdef class Box(ShapeBase):
-    cdef object side
     def __cinit__(self, x, y, z):
         self.thisptr = new defs.Box(x, y, z)
     property side:
         def __get__(self):
-            return [(<defs.Box*>self.thisptr).side[0],
-                    (<defs.Box*>self.thisptr).side[1],
-                    (<defs.Box*>self.thisptr).side[2]]
+            return vec3f_to_list((<defs.Box*>self.thisptr).side)
         def __set__(self, value):
             (<defs.Box*>self.thisptr).side[0] = <double?>value[0]
             (<defs.Box*>self.thisptr).side[1] = <double?>value[1]
             (<defs.Box*>self.thisptr).side[2] = <double?>value[2]
 
 cdef class Sphere(ShapeBase):
-    cdef object radius
     def __cinit__(self, radius):
         self.thisptr = new defs.Sphere(radius)
     property radius:
@@ -86,8 +106,6 @@ cdef class Sphere(ShapeBase):
             (<defs.Sphere*>self.thisptr).radius = <double?>value
 
 cdef class Capsule(ShapeBase):
-    cdef object radius
-    cdef object lz
     def __cinit__(self, radius, lz):
         self.thisptr = new defs.Capsule(radius, lz)
     property radius:
@@ -102,8 +120,6 @@ cdef class Capsule(ShapeBase):
             (<defs.Capsule*>self.thisptr).lz = <double?>value
 
 cdef class Cone(ShapeBase):
-    cdef object radius
-    cdef object lz
     def __cinit__(self, radius, lz):
         self.thisptr = new defs.Cone(radius, lz)
     property radius:
@@ -118,8 +134,6 @@ cdef class Cone(ShapeBase):
             (<defs.Cone*>self.thisptr).lz = <double?>value
 
 cdef class Cylinder(ShapeBase):
-    cdef object radius
-    cdef object lz
     def __cinit__(self, radius, lz):
         self.thisptr = new defs.Cylinder(radius, lz)
     property radius:

@@ -8,8 +8,8 @@ import numpy as np
 cimport numpy as np
 ctypedef np.float64_t DOUBLE_t
 
-cdef vec3f_to_list(defs.Vec3f vec):
-    return [vec[idx] for idx in range(3)]
+cdef vec3f_to_tuple(defs.Vec3f vec):
+    return (vec[0], vec[1], vec[2])
 
 cdef class Quaternion:
     cdef defs.Quaternion3f *thisptr
@@ -71,7 +71,7 @@ cdef class CollisionGeometry:
     property aabb_center:
         def __get__(self):
             if self.thisptr:
-                return vec3f_to_list(self.thisptr.aabb_center)
+                return vec3f_to_tuple(self.thisptr.aabb_center)
             else:
                 return None
         def __set__(self, value):
@@ -90,7 +90,7 @@ cdef class Box(ShapeBase):
         self.thisptr = new defs.Box(x, y, z)
     property side:
         def __get__(self):
-            return vec3f_to_list((<defs.Box*>self.thisptr).side)
+            return vec3f_to_tuple((<defs.Box*>self.thisptr).side)
         def __set__(self, value):
             (<defs.Box*>self.thisptr).side[0] = <double?>value[0]
             (<defs.Box*>self.thisptr).side[1] = <double?>value[1]
@@ -146,6 +146,35 @@ cdef class Cylinder(ShapeBase):
             return (<defs.Cylinder*>self.thisptr).lz
         def __set__(self, value):
             (<defs.Cylinder*>self.thisptr).lz = <double?>value
+
+class Contact:
+    def __init__(self):
+        self.o1 = CollisionGeometry()
+        self.o2 = CollisionGeometry()
+        self.b1 = 0
+        self.b2 = 0
+        self.normal = [0.0, 0.0, 0.0]
+        self.pos = [0.0, 0.0, 0.0]
+        self.penetration_depth = 0.0
+
+class CostSource:
+    def __init__(self):
+        self.aabb_min = [0.0, 0.0, 0.0]
+        self.cost_density = 0.0
+        self.total_cost = 0.0
+
+class CollistionResult:
+    def __init__(self):
+        self.contacts = []
+        self.cost_sources = set()
+
+class CollistionRequest:
+    def __init__(self):
+        self.num_max_contacts = 0
+        self.enable_contact = False
+        self.num_max_cost_sources = 0
+        self.enable_cost = False
+        self.use_approximate_cost = False
 
 cdef class DynamicAABBTreeCollisionManager:
     cdef defs.DynamicAABBTreeCollisionManager *thisptr

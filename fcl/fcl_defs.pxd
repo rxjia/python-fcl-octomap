@@ -67,8 +67,9 @@ cdef extern from "fcl/collision_data.h" namespace "fcl":
         FCL_REAL cost_density
         FCL_REAL total_cost
     cdef cppclass CollisionResult:
-        vector[Contact] contacts
-        set[CostSource] cost_sources
+        CollisionResult() except +
+        void getContacts(vector[Contact]& contacts_)
+        void getCostSources(vector[CostSource]& cost_sources_)
     cdef cppclass CollisionRequest:
         size_t num_max_contacts
         bool enable_contact

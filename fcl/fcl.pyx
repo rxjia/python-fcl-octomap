@@ -1,3 +1,4 @@
+from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libc.stdlib cimport free
@@ -10,6 +11,9 @@ ctypedef np.float64_t DOUBLE_t
 
 cdef vec3f_to_tuple(defs.Vec3f vec):
     return (vec[0], vec[1], vec[2])
+
+cdef vec3f_to_list(defs.Vec3f vec):
+    return [vec[0], vec[1], vec[2]]
 
 cdef class Quaternion:
     cdef defs.Quaternion3f *thisptr
@@ -163,18 +167,23 @@ class CostSource:
         self.cost_density = 0.0
         self.total_cost = 0.0
 
-class CollistionResult:
+class CollisionResult:
     def __init__(self):
         self.contacts = []
-        self.cost_sources = set()
+        self.cost_sources = []
 
-class CollistionRequest:
-    def __init__(self):
-        self.num_max_contacts = 0
-        self.enable_contact = False
-        self.num_max_cost_sources = 0
-        self.enable_cost = False
-        self.use_approximate_cost = False
+class CollisionRequest:
+    def __init__(self,
+                 num_max_contacts = 1,
+                 enable_contact = False,
+                 num_max_cost_sources = 1,
+                 enable_cost = False,
+                 use_approximate_cost = True):
+        self.num_max_contacts = num_max_contacts
+        self.enable_contact = enable_contact
+        self.num_max_cost_sources = num_max_cost_sources
+        self.enable_cost = enable_cost
+        self.use_approximate_cost = use_approximate_cost
 
 cdef class DynamicAABBTreeCollisionManager:
     cdef defs.DynamicAABBTreeCollisionManager *thisptr
@@ -201,3 +210,81 @@ cdef class DynamicAABBTreeCollisionManager:
     def size(self):
         return self.thisptr.size()
 
+cdef python_to_c_contact(defs.Contact contact):
+    c = Contact()
+    if contact.o1.getNodeType() == defs.GEOM_BOX:
+        obj = Box(0, 0, 0)
+        memcpy(obj.thisptr, contact.o1, sizeof(defs.Box))
+        c.o1 = obj
+    elif contact.o1.getNodeType() == defs.GEOM_SPHERE:
+        obj = Sphere(0)
+        memcpy(obj.thisptr, contact.o1, sizeof(defs.Sphere))
+        c.o1 = obj
+    elif contact.o1.getNodeType() == defs.GEOM_CAPSULE:
+        obj = Capsule(0, 0)
+        memcpy(obj.thisptr, contact.o1, sizeof(defs.Capsule))
+        c.o1 = obj
+    elif contact.o1.getNodeType() == defs.GEOM_CONE:
+        obj = Cone(0, 0)
+        memcpy(obj.thisptr, contact.o1, sizeof(defs.Cone))
+        c.o1 = obj
+    elif contact.o1.getNodeType() == defs.GEOM_CYLINDER:
+        obj = Cylinder(0, 0)
+        memcpy(obj.thisptr, contact.o1, sizeof(defs.Cylinder))
+        c.o1 = obj
+
+    if contact.o2.getNodeType() == defs.GEOM_BOX:
+        obj = Box(0, 0, 0)
+        memcpy(obj.thisptr, contact.o2, sizeof(defs.Box))
+        c.o2 = obj
+    elif contact.o2.getNodeType() == defs.GEOM_SPHERE:
+        obj = Sphere(0)
+        memcpy(obj.thisptr, contact.o2, sizeof(defs.Sphere))
+        c.o2 = obj
+    elif contact.o2.getNodeType() == defs.GEOM_CAPSULE:
+        obj = Capsule(0, 0)
+        memcpy(obj.thisptr, contact.o2, sizeof(defs.Capsule))
+        c.o2 = obj
+    elif contact.o2.getNodeType() == defs.GEOM_CONE:
+        obj = Cone(0, 0)
+        memcpy(obj.thisptr, contact.o2, sizeof(defs.Cone))
+        c.o2 = obj
+    elif contact.o2.getNodeType() == defs.GEOM_CYLINDER:
+        obj = Cylinder(0, 0)
+        memcpy(obj.thisptr, contact.o2, sizeof(defs.Cylinder))
+        c.o2 = obj
+    c.b1 = contact.b1
+    c.b2 = contact.b2
+    c.normal = vec3f_to_list(contact.normal)
+    c.pos = vec3f_to_list(contact.pos)
+    c.penetration_depth = contact.penetration_depth
+    return c
+
+cdef python_to_c_costsource(defs.CostSource cost_source):
+    c = CostSource()
+    c.aabb_min = vec3f_to_list(cost_source.aabb_min)
+    c.aabb_max = vec3f_to_list(cost_source.aabb_max)
+    c.cost_density = cost_source.cost_density
+    c.total_cost = cost_source.total_cost
+    return c
+
+def collide(CollisionObject o1, CollisionObject o2, request):
+    cdef defs.CollisionResult result
+    cdef size_t ret = defs.collide(o1.thisptr,
+                                   o2.thisptr,
+                                   defs.CollisionRequest(<size_t?>request.num_max_contacts,
+                                                         <bool?>request.enable_contact,
+                                                         <size_t?>request.num_max_cost_sources,
+                                                         <bool>request.enable_cost,
+                                                         <bool>request.use_approximate_cost),
+                                   result)
+    col_res = CollisionResult()
+    cdef vector[defs.Contact] contacts
+    result.getContacts(contacts)
+    cdef vector[defs.CostSource] costs
+    result.getCostSources(costs)
+    for idx in range(contacts.size()):
+        col_res.contacts.append(python_to_c_contact(contacts[idx]))
+    for idx in range(costs.size()):
+        col_res.cost_sources.append(python_to_c_costsource(costs[idx]))
+    return ret, col_res

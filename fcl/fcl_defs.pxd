@@ -107,6 +107,9 @@ cdef extern from "fcl/collision_object.h" namespace "fcl":
         CollisionObject(shared_ptr[CollisionGeometry]& cgeom_, Transform3f& tf) except +
         OBJECT_TYPE getObjectType()
         NODE_TYPE getNodeType()
+        Vec3f& getTranslation()
+        Matrix3f& getRotation()
+        Quaternion3f& getQuatRotation()
 
 cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
     cdef cppclass ShapeBase(CollisionGeometry):
@@ -163,5 +166,9 @@ cdef extern from "fcl/broadphase/broadphase_dynamic_AABB_tree.h" namespace "fcl"
 
 cdef extern from "fcl/collision.h" namespace "fcl":
     size_t collide(CollisionObject* o1, CollisionObject* o2,
+                   CollisionRequest& request,
+                   CollisionResult& result)
+    size_t collide(CollisionGeometry* o1, Transform3f& tf1,
+                   CollisionGeometry* o2, Transform3f& tf2,
                    CollisionRequest& request,
                    CollisionResult& result)

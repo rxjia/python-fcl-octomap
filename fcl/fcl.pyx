@@ -9,43 +9,106 @@ import numpy as np
 cimport numpy as np
 ctypedef np.float64_t DOUBLE_t
 
+def rotation_to_quaternion(rot):
+    q = np.array(4)
+    q[0] = np.sqrt(max((rot[0, 0] + rot[1, 1] + rot[2, 2] + 1.0)/4.0, 0.0))
+    q[1] = np.sqrt(max((rot[0, 0] - rot[1, 1] - rot[2, 2] + 1.0)/4.0, 0.0))
+    q[2] = np.sqrt(max((-rot[0, 0] + rot[1, 1] - rot[2, 2] + 1.0)/4.0, 0.0))
+    q[3] = np.sqrt(max((-rot[0, 0] - rot[1, 1] + rot[2, 2] + 1.0)/4.0, 0.0))
+    if q[0] >= q[1] and q[0] >= q[2] and q[0] >= q[3]:
+        q[1] *= np.sign(rot[2, 1] - rot[1, 2])
+        q[2] *= np.sign(rot[0, 2] - rot[2, 0])
+        q[3] *= np.sign(rot[1, 0] - rot[0, 1])
+    elif q[1] >= q[0] and q[1] >= q[2] and q[1] >= q[3]:
+        q[0] *= np.sign(rot[2, 1] - rot[1, 2])
+        q[2] *= np.sign(rot[1, 0] + rot[0, 1])
+        q[3] *= np.sign(rot[0, 2] + rot[2, 0])
+    elif q[2] >= q[0] and q[2] >= q[1] and q[2] >= q[3]:
+        q[0] *= np.sign(rot[0, 2] - rot[2, 0])
+        q[1] *= np.sign(rot[1, 0] + rot[0, 1])
+        q[3] *= np.sign(rot[2, 1] + rot[1, 2])
+    elif q[3] >= q[0] and q[3] >= q[1] and q[3] >= q[2]:
+        q[0] *= np.sign(rot[1, 0] - rot[0, 1])
+        q[1] *= np.sign(rot[2, 0] + rot[0, 2])
+        q[2] *= np.sign(rot[2, 1] + rot[1, 2])
+    else:
+        raise ValueError
+    return q/np.linalg.norm(q)
+
+class Quaternion:
+    def __init__(self, *args):
+        if len(args) == 0:
+            self.data = np.zeros(4)
+            self.data[0] = 1.0
+        elif len(args) == 4:
+            self.data = np.array(args)
+        elif len(args) == 1 and len(args[0]) == 4:
+            self.data = np.array(args[0])
+
+    def _getW(self):
+        return self.data[0]
+    def _setW(self, value):
+        self.data[0] = value
+    w = property(_getW, _setW)
+
+    def _getX(self):
+        return self.data[1]
+    def _setX(self, value):
+        self.data[1] = value
+    x = property(_getX, _setX)
+
+    def _getY(self):
+        return self.data[2]
+    def _setY(self, value):
+        self.data[2] = value
+    y = property(_getY, _setY)
+
+    def _getZ(self):
+        return self.data[0]
+    def _setZ(self, value):
+        self.data[0] = value
+    z = property(_getZ, _setZ)
+
+class Transform:
+    def __init__(self, rot=None, pos=None):
+        if not pos is None:
+            self.t = np.array(pos)
+        else:
+            self.t = np.zeros(3)
+
+        if not rot is None:
+            self.q = Quaternion()
+        elif isinstance(rot ,Quaternion):
+            self.q = rot
+        else:
+            self.q = rotation_to_quaternion(rot)
+
 cdef vec3f_to_tuple(defs.Vec3f vec):
     return (vec[0], vec[1], vec[2])
 
 cdef vec3f_to_list(defs.Vec3f vec):
     return [vec[0], vec[1], vec[2]]
 
-cdef class Quaternion:
-    cdef defs.Quaternion3f *thisptr
-    def __cinit__(self, *args):
-        import numbers
-        if len(args) == 4:
-            self.thisptr = new defs.Quaternion3f(<double?>args[0],
-                                                 <double?>args[1],
-                                                 <double?>args[2],
-                                                 <double?>args[3])
-        else:
-            self.thisptr = new defs.Quaternion3f()
-            if len(args) == 1 and isinstance(args[0], np.ndarray):
-                self.thisptr.fromRotation(defs.Matrix3f(<double?>args[0][0, 0], <double?>args[0][0, 1], <double?>args[0][0, 2],
-                                                        <double?>args[0][1, 0], <double?>args[0][1, 1], <double?>args[0][1, 2],
-                                                        <double?>args[0][2, 0], <double?>args[0][2, 1], <double?>args[0][2, 2]))
-            if len(args) == 2 and len(args[0]) == 3:
-                self.thisptr.fromAxisAngle(defs.Vec3f(<double?>args[0][0],
-                                                      <double?>args[0][1],
-                                                      <double?>args[0][2]),
-                                           <double?>args[1])
-    def __dealloc__(self):
-        if self.thisptr:
-            del self.thisptr
-
 cdef class CollisionObject:
     cdef defs.CollisionObject *thisptr
     cdef defs.PyObject *geom
-    def __cinit__(self, ShapeBase geom, tf=None):
+    def __cinit__(self, CollisionGeometry geom=CollisionGeometry(), tf=None):
         defs.Py_INCREF(<defs.PyObject*>geom)
         self.geom = <defs.PyObject*>geom
-        self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](<defs.CollisionGeometry*>geom.thisptr))
+        if not geom.getNodeType() is None:
+            if not tf is None:
+                self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](geom.thisptr),
+                                                        defs.Transform3f(defs.Quaternion3f(<double?>tf.q.w,
+                                                                                           <double?>tf.q.x,
+                                                                                           <double?>tf.q.y,
+                                                                                           <double?>tf.q.z),
+                                                                         defs.Vec3f(<double?>tf.t[0],
+                                                                                    <double?>tf.t[1],
+                                                                                    <double?>tf.t[2])))
+            else:
+                self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](geom.thisptr))
+        else:
+            raise ValueError
     def __dealloc__(self):
         if self.thisptr:
             free(self.thisptr)
@@ -54,6 +117,11 @@ cdef class CollisionObject:
         return self.thisptr.getObjectType()
     def getNodeType(self):
         return self.thisptr.getNodeType()
+    def getTranslation(self):
+        return vec3f_to_tuple(self.thisptr.getTranslation())
+    def getQuatRotation(self):
+        cdef defs.Quaternion3f quat = self.thisptr.getQuatRotation()
+        return Quaternion(quat.getW(), quat.getX(), quat.getY(), quat.getZ())
 
 cdef class CollisionGeometry:
     cdef defs.CollisionGeometry *thisptr
@@ -87,7 +155,8 @@ cdef class CollisionGeometry:
                 raise ReferenceError
 
 cdef class ShapeBase(CollisionGeometry):
-    pass
+    def __cinit__(self):
+        pass
 
 cdef class Box(ShapeBase):
     def __cinit__(self, x, y, z):

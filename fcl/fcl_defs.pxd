@@ -110,6 +110,12 @@ cdef extern from "fcl/collision_object.h" namespace "fcl":
         Vec3f& getTranslation()
         Matrix3f& getRotation()
         Quaternion3f& getQuatRotation()
+        void setTranslation(Vec3f& T)
+        void setQuatRotation(Quaternion3f& q)
+        void setTransform(Quaternion3f& q, Vec3f& T)
+        bool isOccupied()
+        bool isFree()
+        bool isUncertain()
 
 cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
     cdef cppclass ShapeBase(CollisionGeometry):
@@ -160,6 +166,8 @@ cdef extern from "fcl/broadphase/broadphase_dynamic_AABB_tree.h" namespace "fcl"
         void distance(CollisionObject* obj, void* cdata, DistanceCallBack callback)
         void setup()
         void update()
+        void update(CollisionObject* updated_obj)
+        void update(vector[CollisionObject*] updated_objs)
         void clear()
         bool empty()
         size_t size()

@@ -122,6 +122,19 @@ cdef class CollisionObject:
     def getQuatRotation(self):
         cdef defs.Quaternion3f quat = self.thisptr.getQuatRotation()
         return Quaternion(quat.getW(), quat.getX(), quat.getY(), quat.getZ())
+    def setTranslation(self, vec):
+        self.thisptr.setTranslation(defs.Vec3f(<double?>vec[0], <double?>vec[1], <double?>vec[2]))
+    def setQuatRotation(self, q):
+        self.thisptr.setQuatRotation(defs.Quaternion3f(<double?>q[0], <double?>q[1], <double?>q[2], <double?>q[3]))
+    def setTransform(self, q, vec):
+        self.thisptr.setTransform(defs.Quaternion3f(<double?>q[0], <double?>q[1], <double?>q[2], <double?>q[3]),
+                                 defs.Vec3f(<double?>vec[0], <double?>vec[1], <double?>vec[2]))
+    def isOccupied(self):
+        return self.thisptr.isOccupied()
+    def isFree(self):
+        return self.thisptr.isFree()
+    def isUncertain(self):
+        return self.thisptr.isUncertain()
 
 cdef class CollisionGeometry:
     cdef defs.CollisionGeometry *thisptr
@@ -270,8 +283,16 @@ cdef class DynamicAABBTreeCollisionManager:
         self.thisptr.registerObject(obj.thisptr)
     def setup(self):
         self.thisptr.setup()
-    def update(self):
-        self.thisptr.update()
+    def update(self, arg=None):
+        cdef vector[defs.CollisionObject*] objs
+        if hasattr(arg, "__len__"):
+            for a in arg:
+                objs.push_back((<CollisionObject>a).thisptr)
+            self.thisptr.update(objs)
+        elif arg is None:
+            self.thisptr.update()    
+        else:
+            self.thisptr.update((<CollisionObject>arg).thisptr)
     def clear(self):
         self.thisptr.clear()
     def empty(self):

@@ -9,6 +9,18 @@ import numpy as np
 cimport numpy as np
 ctypedef np.float64_t DOUBLE_t
 
+class OBJECT_TYPE:
+    OT_UNKNOWN, OT_BVH, OT_GEOM, OT_OCTREE, OT_COUNT = range(5)
+    def __init__(self):
+        pass
+
+class NODE_TYPE:
+    BV_UNKNOWN, BV_AABB, BV_OBB, BV_RSS, BV_kIOS, BV_OBBRSS, BV_KDOP16, BV_KDOP18, BV_KDOP24,\
+    GEOM_BOX, GEOM_SPHERE, GEOM_CAPSULE, GEOM_CONE, GEOM_CYLINDER, GEOM_CONVEX, GEOM_PLANE,\
+    GEOM_HALFSPACE, GEOM_TRIANGLE, GEOM_OCTREE, NODE_COUNT = range(20)
+    def __init__(self):
+        pass
+
 def rotation_to_quaternion(rot):
     q = np.array(4)
     q[0] = np.sqrt(max((rot[0, 0] + rot[1, 1] + rot[2, 2] + 1.0)/4.0, 0.0))

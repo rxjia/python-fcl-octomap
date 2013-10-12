@@ -111,6 +111,33 @@ cdef class ShapeBase(CollisionGeometry):
     def __cinit__(self):
         pass
 
+cdef class Triangle2(ShapeBase):
+    def __cinit__(self, a, b, c):
+        self.thisptr = new defs.Triangle2(defs.Vec3f(<double?>a[0], <double?>a[1], <double?>a[2]),
+                                          defs.Vec3f(<double?>b[0], <double?>b[1], <double?>b[2]),
+                                          defs.Vec3f(<double?>c[0], <double?>c[1], <double?>c[2]))
+    property a:
+        def __get__(self):
+            return vec3f_to_tuple((<defs.Triangle2*>self.thisptr).a)
+        def __set__(self, value):
+            (<defs.Triangle2*>self.thisptr).a[0] = <double?>value[0]
+            (<defs.Triangle2*>self.thisptr).a[1] = <double?>value[1]
+            (<defs.Triangle2*>self.thisptr).a[2] = <double?>value[2]
+    property b:
+        def __get__(self):
+            return vec3f_to_tuple((<defs.Triangle2*>self.thisptr).b)
+        def __set__(self, value):
+            (<defs.Triangle2*>self.thisptr).b[0] = <double?>value[0]
+            (<defs.Triangle2*>self.thisptr).b[1] = <double?>value[1]
+            (<defs.Triangle2*>self.thisptr).b[2] = <double?>value[2]
+    property c:
+        def __get__(self):
+            return vec3f_to_tuple((<defs.Triangle2*>self.thisptr).c)
+        def __set__(self, value):
+            (<defs.Triangle2*>self.thisptr).c[0] = <double?>value[0]
+            (<defs.Triangle2*>self.thisptr).c[1] = <double?>value[1]
+            (<defs.Triangle2*>self.thisptr).c[2] = <double?>value[2]
+
 cdef class Box(ShapeBase):
     def __cinit__(self, x, y, z):
         self.thisptr = new defs.Box(x, y, z)
@@ -262,6 +289,10 @@ cdef python_to_c_contact(defs.Contact contact):
         obj = Cylinder(0, 0)
         memcpy(obj.thisptr, contact.o1, sizeof(defs.Cylinder))
         c.o1 = obj
+    elif contact.o1.getNodeType() == defs.GEOM_TRIANGLE:
+        obj = Triangle2(np.zeros(3), np.zeros(3), np.zeros(3))
+        memcpy(obj.thisptr, contact.o1, sizeof(defs.Triangle2))
+        c.o1 = obj
 
     if contact.o2.getNodeType() == defs.GEOM_BOX:
         obj = Box(0, 0, 0)
@@ -282,6 +313,10 @@ cdef python_to_c_contact(defs.Contact contact):
     elif contact.o2.getNodeType() == defs.GEOM_CYLINDER:
         obj = Cylinder(0, 0)
         memcpy(obj.thisptr, contact.o2, sizeof(defs.Cylinder))
+        c.o2 = obj
+    elif contact.o2.getNodeType() == defs.GEOM_TRIANGLE:
+        obj = Triangle2(np.zeros(3), np.zeros(3), np.zeros(3))
+        memcpy(obj.thisptr, contact.o2, sizeof(defs.Triangle2))
         c.o2 = obj
     c.b1 = contact.b1
     c.b2 = contact.b2

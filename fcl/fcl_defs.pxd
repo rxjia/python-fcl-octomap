@@ -121,6 +121,10 @@ cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
     cdef cppclass ShapeBase(CollisionGeometry):
         ShapeBase() except +
 
+    cdef cppclass Triangle2(ShapeBase):
+        Triangle2(Vec3f& a_, Vec3f& b_, Vec3f& c_) except +
+        Vec3f a, b, c
+
     cdef cppclass Box(ShapeBase):
         Box(FCL_REAL x, FCL_REAL y, FCL_REAL z) except +
         Vec3f side
@@ -144,16 +148,16 @@ cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
         FCL_REAL radius
         FCL_REAL lz
 
-    cdef cppclass Convex:
+    cdef cppclass Convex(ShapeBase):
         Convex(Vec3f* plane_nomals_,
                FCL_REAL* plane_dis_,
                int num_planes,
                Vec3f* points_,
                int num_points_,
                int* polygons_) except +
-    cdef cppclass Halfspace:
+    cdef cppclass Halfspace(ShapeBase):
         Halfspace(Vec3f& n_, FCL_REAL d_) except +
-    cdef cppclass Plane:
+    cdef cppclass Plane(ShapeBase):
         Plane(Vec3f& n_, FCL_REAL d_) except +
 
 cdef extern from "fcl/broadphase/broadphase.h" namespace "fcl":

@@ -50,36 +50,61 @@ def rotation_to_quaternion(rot):
 class Quaternion:
     def __init__(self, *args):
         if len(args) == 0:
-            self.data = np.zeros(4)
-            self.data[0] = 1.0
+            self._data = np.zeros(4)
+            self._data[0] = 1.0
         elif len(args) == 4:
-            self.data = np.array(args)
+            self._data = np.array(args)
         elif len(args) == 1 and len(args[0]) == 4:
-            self.data = np.array(args[0])
+            self._data = np.array(args[0])
 
     def _getW(self):
-        return self.data[0]
+        return self._data[0]
     def _setW(self, value):
-        self.data[0] = value
+        self._data[0] = value
     w = property(_getW, _setW)
 
     def _getX(self):
-        return self.data[1]
+        return self._data[1]
     def _setX(self, value):
-        self.data[1] = value
+        self._data[1] = value
     x = property(_getX, _setX)
 
     def _getY(self):
-        return self.data[2]
+        return self._data[2]
     def _setY(self, value):
-        self.data[2] = value
+        self._data[2] = value
     y = property(_getY, _setY)
 
     def _getZ(self):
-        return self.data[0]
+        return self._data[3]
     def _setZ(self, value):
-        self.data[0] = value
+        self._data[3] = value
     z = property(_getZ, _setZ)
+
+    def _getV(self):
+        return self._data[1:]
+    def _setV(self, value):
+        self._data[1:] = value
+    v = property(_getV, _setV)
+
+    def __getitem__(self, idx):
+        return self._data[idx]
+    def __setitem__(self, idx, value):
+        self._data[idx] = value
+
+    def isIdentity(self):
+        return self._data[0] == 1 and \
+               all((d == 0 for d in self._data[1:]))
+    def __add__(self, other):
+        return Quaternion(self._data + other._data)
+    def __sub__(self, other):
+        return Quaternion(self._data - other._data)
+    def __neg__(self):
+        return Quaternion(-self._data)
+    def __mul__(self, other):
+        v = self.w * other.v + other.w * self.v + np.cross(self.v, other.v)
+        return Quaternion(self.w * other.w - np.dot(self.v, other.v),
+                          v[0], v[1], v[2])
 
 class Transform:
     def __init__(self, rot=None, pos=None):

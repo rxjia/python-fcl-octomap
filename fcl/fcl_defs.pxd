@@ -151,6 +151,10 @@ cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
                Vec3f* points_,
                int num_points_,
                int* polygons_) except +
+    cdef cppclass Halfspace:
+        Halfspace(Vec3f& n_, FCL_REAL d_) except +
+    cdef cppclass Plane:
+        Plane(Vec3f& n_, FCL_REAL d_) except +
 
 cdef extern from "fcl/broadphase/broadphase.h" namespace "fcl":
     ctypedef bool (*CollisionCallBack)(CollisionObject* o1, CollisionObject* o2, void* cdata)

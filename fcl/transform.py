@@ -92,6 +92,8 @@ class Quaternion(object):
     def conj(self):
         return Quaternion(self.w, -self.x, -self.y, -self.z)
 
+    def __str__(self):
+        return str(self._data)
 
 class Transform:
     def __init__(self, rot=None, pos=None):

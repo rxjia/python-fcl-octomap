@@ -5,9 +5,10 @@ from Cython.Distutils import build_ext
 setup(
     name="fcl",
     version="0.1",
+    license = "BSD",
     packages=["fcl"],
     ext_modules=[Extension(
-        "fcl",
+        "fcl.fcl",
         ["fcl/fcl.pyx"],
         libraries=[
                 "fcl"

@@ -1,4 +1,4 @@
-import fcl
+from fcl import fcl, transform
 
 objs = [fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0)),
         fcl.CollisionObject(fcl.Sphere(4.0)),
@@ -12,9 +12,9 @@ manager.registerObject(fcl.CollisionObject(fcl.Cylinder(7.0, 8.0)))
 print "After register 2 : ", manager.size()
 
 ret, result = fcl.collide(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
-                                              fcl.Transform(fcl.Quaternion(), [10.0, 0.0, 0.0])),
+                                              transform.Transform(transform.Quaternion(), [10.0, 0.0, 0.0])),
                           fcl.CollisionObject(fcl.Sphere(4.0),
-                                              fcl.Transform(fcl.Quaternion(), [-10.0, 0.0, 0.0])),
+                                              transform.Transform(transform.Quaternion(), [-10.0, 0.0, 0.0])),
                           fcl.CollisionRequest())
 print ret
 for contact in result.contacts:
@@ -24,9 +24,9 @@ for cost_source in result.cost_sources:
     print cost_source
 
 ret, result = fcl.collide(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
-                                              fcl.Transform(fcl.Quaternion())),
+                                              transform.Transform(transform.Quaternion())),
                           fcl.CollisionObject(fcl.Sphere(4.0),
-                                              fcl.Transform(fcl.Quaternion(), [0.0, 0.0, 0.0])),
+                                              transform.Transform(transform.Quaternion(), [0.0, 0.0, 0.0])),
                           fcl.CollisionRequest())
 print ret
 for contact in result.contacts:

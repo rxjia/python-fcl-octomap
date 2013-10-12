@@ -1,3 +1,4 @@
+
 from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -6,6 +7,7 @@ from libc.string cimport memcpy
 from cython.operator cimport dereference as deref, preincrement as inc, address
 cimport fcl_defs as defs
 import numpy as np
+import transform as tf
 cimport numpy as np
 ctypedef np.float64_t DOUBLE_t
 
@@ -20,105 +22,6 @@ class NODE_TYPE:
     GEOM_HALFSPACE, GEOM_TRIANGLE, GEOM_OCTREE, NODE_COUNT = range(20)
     def __init__(self):
         pass
-
-def rotation_to_quaternion(rot):
-    q = np.array(4)
-    q[0] = np.sqrt(max((rot[0, 0] + rot[1, 1] + rot[2, 2] + 1.0)/4.0, 0.0))
-    q[1] = np.sqrt(max((rot[0, 0] - rot[1, 1] - rot[2, 2] + 1.0)/4.0, 0.0))
-    q[2] = np.sqrt(max((-rot[0, 0] + rot[1, 1] - rot[2, 2] + 1.0)/4.0, 0.0))
-    q[3] = np.sqrt(max((-rot[0, 0] - rot[1, 1] + rot[2, 2] + 1.0)/4.0, 0.0))
-    if q[0] >= q[1] and q[0] >= q[2] and q[0] >= q[3]:
-        q[1] *= np.sign(rot[2, 1] - rot[1, 2])
-        q[2] *= np.sign(rot[0, 2] - rot[2, 0])
-        q[3] *= np.sign(rot[1, 0] - rot[0, 1])
-    elif q[1] >= q[0] and q[1] >= q[2] and q[1] >= q[3]:
-        q[0] *= np.sign(rot[2, 1] - rot[1, 2])
-        q[2] *= np.sign(rot[1, 0] + rot[0, 1])
-        q[3] *= np.sign(rot[0, 2] + rot[2, 0])
-    elif q[2] >= q[0] and q[2] >= q[1] and q[2] >= q[3]:
-        q[0] *= np.sign(rot[0, 2] - rot[2, 0])
-        q[1] *= np.sign(rot[1, 0] + rot[0, 1])
-        q[3] *= np.sign(rot[2, 1] + rot[1, 2])
-    elif q[3] >= q[0] and q[3] >= q[1] and q[3] >= q[2]:
-        q[0] *= np.sign(rot[1, 0] - rot[0, 1])
-        q[1] *= np.sign(rot[2, 0] + rot[0, 2])
-        q[2] *= np.sign(rot[2, 1] + rot[1, 2])
-    else:
-        raise ValueError
-    return q/np.linalg.norm(q)
-
-class Quaternion:
-    def __init__(self, *args):
-        if len(args) == 0:
-            self._data = np.zeros(4)
-            self._data[0] = 1.0
-        elif len(args) == 4:
-            self._data = np.array(args)
-        elif len(args) == 1 and len(args[0]) == 4:
-            self._data = np.array(args[0])
-
-    def _getW(self):
-        return self._data[0]
-    def _setW(self, value):
-        self._data[0] = value
-    w = property(_getW, _setW)
-
-    def _getX(self):
-        return self._data[1]
-    def _setX(self, value):
-        self._data[1] = value
-    x = property(_getX, _setX)
-
-    def _getY(self):
-        return self._data[2]
-    def _setY(self, value):
-        self._data[2] = value
-    y = property(_getY, _setY)
-
-    def _getZ(self):
-        return self._data[3]
-    def _setZ(self, value):
-        self._data[3] = value
-    z = property(_getZ, _setZ)
-
-    def _getV(self):
-        return self._data[1:]
-    def _setV(self, value):
-        self._data[1:] = value
-    v = property(_getV, _setV)
-
-    def __getitem__(self, idx):
-        return self._data[idx]
-    def __setitem__(self, idx, value):
-        self._data[idx] = value
-
-    def isIdentity(self):
-        return self._data[0] == 1 and \
-               all((d == 0 for d in self._data[1:]))
-    def __add__(self, other):
-        return Quaternion(self._data + other._data)
-    def __sub__(self, other):
-        return Quaternion(self._data - other._data)
-    def __neg__(self):
-        return Quaternion(-self._data)
-    def __mul__(self, other):
-        v = self.w * other.v + other.w * self.v + np.cross(self.v, other.v)
-        return Quaternion(self.w * other.w - np.dot(self.v, other.v),
-                          v[0], v[1], v[2])
-
-class Transform:
-    def __init__(self, rot=None, pos=None):
-        if not pos is None:
-            self.t = np.array(pos)
-        else:
-            self.t = np.zeros(3)
-
-        if not rot is None:
-            self.q = Quaternion()
-        elif isinstance(rot ,Quaternion):
-            self.q = rot
-        else:
-            self.q = rotation_to_quaternion(rot)
 
 cdef vec3f_to_tuple(defs.Vec3f vec):
     return (vec[0], vec[1], vec[2])
@@ -158,7 +61,7 @@ cdef class CollisionObject:
         return vec3f_to_tuple(self.thisptr.getTranslation())
     def getQuatRotation(self):
         cdef defs.Quaternion3f quat = self.thisptr.getQuatRotation()
-        return Quaternion(quat.getW(), quat.getX(), quat.getY(), quat.getZ())
+        return tf.Quaternion(quat.getW(), quat.getX(), quat.getY(), quat.getZ())
     def setTranslation(self, vec):
         self.thisptr.setTranslation(defs.Vec3f(<double?>vec[0], <double?>vec[1], <double?>vec[2]))
     def setQuatRotation(self, q):

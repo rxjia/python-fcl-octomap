@@ -1,30 +1,74 @@
 import numpy as np
 
 def rotation_to_quaternion(rot):
-    q = np.array(4)
-    q[0] = np.sqrt(max((rot[0, 0] + rot[1, 1] + rot[2, 2] + 1.0)/4.0, 0.0))
-    q[1] = np.sqrt(max((rot[0, 0] - rot[1, 1] - rot[2, 2] + 1.0)/4.0, 0.0))
-    q[2] = np.sqrt(max((-rot[0, 0] + rot[1, 1] - rot[2, 2] + 1.0)/4.0, 0.0))
-    q[3] = np.sqrt(max((-rot[0, 0] - rot[1, 1] + rot[2, 2] + 1.0)/4.0, 0.0))
-    if q[0] >= q[1] and q[0] >= q[2] and q[0] >= q[3]:
-        q[1] *= np.sign(rot[2, 1] - rot[1, 2])
-        q[2] *= np.sign(rot[0, 2] - rot[2, 0])
-        q[3] *= np.sign(rot[1, 0] - rot[0, 1])
-    elif q[1] >= q[0] and q[1] >= q[2] and q[1] >= q[3]:
-        q[0] *= np.sign(rot[2, 1] - rot[1, 2])
-        q[2] *= np.sign(rot[1, 0] + rot[0, 1])
-        q[3] *= np.sign(rot[0, 2] + rot[2, 0])
-    elif q[2] >= q[0] and q[2] >= q[1] and q[2] >= q[3]:
-        q[0] *= np.sign(rot[0, 2] - rot[2, 0])
-        q[1] *= np.sign(rot[1, 0] + rot[0, 1])
-        q[3] *= np.sign(rot[2, 1] + rot[1, 2])
-    elif q[3] >= q[0] and q[3] >= q[1] and q[3] >= q[2]:
-        q[0] *= np.sign(rot[1, 0] - rot[0, 1])
-        q[1] *= np.sign(rot[2, 0] + rot[0, 2])
-        q[2] *= np.sign(rot[2, 1] + rot[1, 2])
+    next_idx = (1, 2, 0)
+    data = np.zeros(4)
+    trace = np.trace(rot)
+    if trace > 0.0:
+        root = np.sqrt(trace + 1.0)
+        data[0] = 0.5 * root
+        root = 0.5 / root
+        data[1] = (rot[2, 1] - rot[1, 2]) * root
+        data[2] = (rot[0, 2] - rot[2, 0]) * root
+        data[3] = (rot[1, 0] - rot[0, 1]) * root
     else:
-        raise ValueError
-    return q/np.linalg.norm(q)
+        i = 0
+        if rot[1, 1] > rot[0, 0]:
+            i = 1
+        if rot[2, 2] > rot[i, i]:
+            i = 2
+        j = next_idx[i]
+        k = next_idx[j]
+
+        root = np.sqrt(rot[i, i] - rot[j, j] - rot[k, k] + 1.0)
+        data[i + 1] = 0.5 * root
+        root = 0.5 / root
+        data[0] = (rot[k, j] - rot[j, k]) * root
+        data[j + 1] = (rot[j, i] + rot[i, j]) * root
+        data[k + 1] = (rot[k, i] + rot[i, k]) * root
+    return Quaternion(data)
+
+def quaternion_to_rotation(quat):
+    data = quat._data
+    twoX  = 2.0 * data[1]
+    twoY  = 2.0 * data[2]
+    twoZ  = 2.0 * data[3]
+    twoWX = twoX * data[0]
+    twoWY = twoY * data[0]
+    twoWZ = twoZ * data[0]
+    twoXX = twoX * data[1]
+    twoXY = twoY * data[1]
+    twoXZ = twoZ * data[1]
+    twoYY = twoY * data[2]
+    twoYZ = twoZ * data[2]
+    twoZZ = twoZ * data[3]
+
+    return np.array([[1.0 - (twoYY + twoZZ), twoXY - twoWZ, twoXZ + twoWY],
+                        [twoXY + twoWZ, 1.0 - (twoXX + twoZZ), twoYZ - twoWX],
+                        [twoXZ - twoWY, twoYZ + twoWX, 1.0 - (twoXX + twoYY)]])
+
+def axisangle_to_quaternion(axis, angle):
+    half_angle = 0.5 * angle
+    sn = np.sin(half_angle)
+    data = np.zeros(4)
+    data[0] = np.cos(half_angle)
+    data[1:] = sn * axis
+    return Quaternion(data)
+
+def quaternion_to_axisangle(quat):
+    data = quat._data
+    sqr_length = sum(np.square(data[1:]))
+    axis = np.zeros(3)
+    if sqr_length > 0:
+        angle = 2.0 * np.acos(data[0])
+        inv_length = 1.0 / np.sqrt(sqr_length)
+        axis = inv_length * data[1:]
+    else:
+        angle = 0
+        axis[0] = 1
+        axis[1] = 0
+        axis[2] = 0
+    return axis, angle
 
 class Quaternion(object):
     def __init__(self, *args):
@@ -89,11 +133,30 @@ class Quaternion(object):
         v = self.w * other.v + other.w * self.v + np.cross(self.v, other.v)
         return Quaternion(self.w * other.w - np.dot(self.v, other.v),
                           v[0], v[1], v[2])
+    def dot(self, other):
+        return Quaternion(np.dot(self._data, other._data))
+
     def conj(self):
         return Quaternion(self.w, -self.x, -self.y, -self.z)
 
     def __str__(self):
         return str(self._data)
+
+    def inverse(self):
+        data = np.zeros(4)
+        sqr_length = sum(np.square(data))
+        if sqr_length > 0:
+            inv_length = 1 / np.sqrt(sqr_length);
+            data[0] *= inv_length
+            data[1:] *= (-inv_length)
+        else:
+            data[1:] *= (-1)
+        return Quaternion(data)
+
+    def transform(vec):
+        r = self * Quaternion(0.0, vec[0], vec[1], vec[2]) * self.conj()
+        return r.v
+
 
 class Transform:
     def __init__(self, rot=None, pos=None):

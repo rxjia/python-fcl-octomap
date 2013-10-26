@@ -101,6 +101,8 @@ cdef extern from "fcl/collision_object.h" namespace "fcl":
         FCL_REAL threshold_occupied
         FCL_REAL threshold_free
 
+    ctypedef CollisionGeometry const_CollisionGeometry "const fcl::CollisionGeometry"
+
     cdef cppclass CollisionObject:
         CollisionObject() except +
         CollisionObject(shared_ptr[CollisionGeometry]& cgeom_) except +
@@ -155,10 +157,16 @@ cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
                Vec3f* points_,
                int num_points_,
                int* polygons_) except +
+
     cdef cppclass Halfspace(ShapeBase):
         Halfspace(Vec3f& n_, FCL_REAL d_) except +
+        Vec3f n
+        FCL_REAL d
+
     cdef cppclass Plane(ShapeBase):
         Plane(Vec3f& n_, FCL_REAL d_) except +
+        Vec3f n
+        FCL_REAL d
 
 cdef extern from "fcl/broadphase/broadphase.h" namespace "fcl":
     ctypedef bool (*CollisionCallBack)(CollisionObject* o1, CollisionObject* o2, void* cdata)
@@ -172,6 +180,8 @@ cdef extern from "fcl/broadphase/broadphase_dynamic_AABB_tree.h" namespace "fcl"
         void unregisterObject(CollisionObject* obj)
         void collide(CollisionObject* obj, void* cdata, CollisionCallBack callback)
         void distance(CollisionObject* obj, void* cdata, DistanceCallBack callback)
+        void collide(void* cdata, CollisionCallBack callback)
+        void distance(void* cdata, DistanceCallBack callback)
         void setup()
         void update()
         void update(CollisionObject* updated_obj)
@@ -179,6 +189,13 @@ cdef extern from "fcl/broadphase/broadphase_dynamic_AABB_tree.h" namespace "fcl"
         void clear()
         bool empty()
         size_t size()
+        int max_tree_nonbalanced_level
+        int tree_incremental_balance_pass
+        int& tree_topdown_balance_threshold
+        int& tree_topdown_level
+        int tree_init_level
+        bool octree_as_geometry_collide
+        bool octree_as_geometry_distance
 
 cdef extern from "fcl/collision.h" namespace "fcl":
     size_t collide(CollisionObject* o1, CollisionObject* o2,

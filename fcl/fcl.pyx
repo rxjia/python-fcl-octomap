@@ -200,6 +200,44 @@ cdef class Cylinder(ShapeBase):
         def __set__(self, value):
             (<defs.Cylinder*>self.thisptr).lz = <double?>value
 
+cdef class Halfspace(ShapeBase):
+    def __cinit__(self, n, d):
+        self.thisptr = new defs.Halfspace(defs.Vec3f(<double?>n[0],
+                                                     <double?>n[1],
+                                                     <double?>n[2]),
+                                          <double?>d)
+    property n:
+        def __get__(self):
+            return vec3f_to_tuple((<defs.Halfspace*>self.thisptr).n)
+        def __set__(self, value):
+            (<defs.Halfspace*>self.thisptr).n[0] = <double?>value[0]
+            (<defs.Halfspace*>self.thisptr).n[1] = <double?>value[1]
+            (<defs.Halfspace*>self.thisptr).n[2] = <double?>value[2]
+    property d:
+        def __get__(self):
+            return (<defs.Halfspace*>self.thisptr).d
+        def __set__(self, value):
+            (<defs.Halfspace*>self.thisptr).d = <double?>value
+
+cdef class Plane(ShapeBase):
+    def __cinit__(self, n, d):
+        self.thisptr = new defs.Plane(defs.Vec3f(<double?>n[0],
+                                                 <double?>n[1],
+                                                 <double?>n[2]),
+                                      <double?>d)
+    property n:
+        def __get__(self):
+            return vec3f_to_tuple((<defs.Plane*>self.thisptr).n)
+        def __set__(self, value):
+            (<defs.Plane*>self.thisptr).n[0] = <double?>value[0]
+            (<defs.Plane*>self.thisptr).n[1] = <double?>value[1]
+            (<defs.Plane*>self.thisptr).n[2] = <double?>value[2]
+    property d:
+        def __get__(self):
+            return (<defs.Plane*>self.thisptr).d
+        def __set__(self, value):
+            (<defs.Plane*>self.thisptr).d = <double?>value
+
 class Contact:
     def __init__(self):
         self.o1 = CollisionGeometry()
@@ -266,58 +304,80 @@ cdef class DynamicAABBTreeCollisionManager:
         return self.thisptr.empty()
     def size(self):
         return self.thisptr.size()
+    property max_tree_nonbalanced_level:
+        def __get__(self):
+            return self.thisptr.max_tree_nonbalanced_level
+        def __set__(self, value):
+            self.thisptr.max_tree_nonbalanced_level = <int?>value
+    property tree_incremental_balance_pass:
+        def __get__(self):
+            return self.thisptr.tree_incremental_balance_pass
+        def __set__(self, value):
+            self.thisptr.tree_incremental_balance_pass = <int?>value
+    property tree_topdown_balance_threshold:
+        def __get__(self):
+            return self.thisptr.tree_topdown_balance_threshold
+        def __set__(self, value):
+            self.thisptr.tree_topdown_balance_threshold = <int?>value
+    property tree_topdown_level:
+        def __get__(self):
+            return self.thisptr.tree_topdown_level
+        def __set__(self, value):
+            self.thisptr.tree_topdown_level = <int?>value
+    property tree_init_level:
+        def __get__(self):
+            return self.thisptr.tree_init_level
+        def __set__(self, value):
+            self.thisptr.tree_init_level = <int?>value
+    property octree_as_geometry_collide:
+        def __get__(self):
+            return self.thisptr.octree_as_geometry_collide
+        def __set__(self, value):
+            self.thisptr.octree_as_geometry_collide = <bool?>value
+    property octree_as_geometry_distance:
+        def __get__(self):
+            return self.thisptr.octree_as_geometry_distance
+        def __set__(self, value):
+            self.thisptr.octree_as_geometry_distance = <bool?>value
 
-cdef python_to_c_contact(defs.Contact contact):
+cdef c_to_python_collision_geometry(defs.const_CollisionGeometry* geom):
+    if geom.getNodeType() == defs.GEOM_BOX:
+        obj = Box(0, 0, 0)
+        memcpy(obj.thisptr, geom, sizeof(defs.Box))
+        return obj
+    elif geom.getNodeType() == defs.GEOM_SPHERE:
+        obj = Sphere(0)
+        memcpy(obj.thisptr, geom, sizeof(defs.Sphere))
+        return obj
+    elif geom.getNodeType() == defs.GEOM_CAPSULE:
+        obj = Capsule(0, 0)
+        memcpy(obj.thisptr, geom, sizeof(defs.Capsule))
+        return obj
+    elif geom.getNodeType() == defs.GEOM_CONE:
+        obj = Cone(0, 0)
+        memcpy(obj.thisptr, geom, sizeof(defs.Cone))
+        return obj
+    elif geom.getNodeType() == defs.GEOM_CYLINDER:
+        obj = Cylinder(0, 0)
+        memcpy(obj.thisptr, geom, sizeof(defs.Cylinder))
+        return obj
+    elif geom.getNodeType() == defs.GEOM_TRIANGLE:
+        obj = Triangle2(np.zeros(3), np.zeros(3), np.zeros(3))
+        memcpy(obj.thisptr, geom, sizeof(defs.Triangle2))
+        return obj
+    elif geom.getNodeType() == defs.GEOM_HALFSPACE:
+        obj = Halfspace(np.zeros(3), 0)
+        memcpy(obj.thisptr, geom, sizeof(defs.Halfspace))
+        return obj
+    elif geom.getNodeType() == defs.GEOM_PLANE:
+        obj = Plane(np.zeros(3), 0)
+        memcpy(obj.thisptr, geom, sizeof(defs.Plane))
+        return obj
+
+cdef c_to_python_contact(defs.Contact contact):
     c = Contact()
-    if contact.o1.getNodeType() == defs.GEOM_BOX:
-        obj = Box(0, 0, 0)
-        memcpy(obj.thisptr, contact.o1, sizeof(defs.Box))
-        c.o1 = obj
-    elif contact.o1.getNodeType() == defs.GEOM_SPHERE:
-        obj = Sphere(0)
-        memcpy(obj.thisptr, contact.o1, sizeof(defs.Sphere))
-        c.o1 = obj
-    elif contact.o1.getNodeType() == defs.GEOM_CAPSULE:
-        obj = Capsule(0, 0)
-        memcpy(obj.thisptr, contact.o1, sizeof(defs.Capsule))
-        c.o1 = obj
-    elif contact.o1.getNodeType() == defs.GEOM_CONE:
-        obj = Cone(0, 0)
-        memcpy(obj.thisptr, contact.o1, sizeof(defs.Cone))
-        c.o1 = obj
-    elif contact.o1.getNodeType() == defs.GEOM_CYLINDER:
-        obj = Cylinder(0, 0)
-        memcpy(obj.thisptr, contact.o1, sizeof(defs.Cylinder))
-        c.o1 = obj
-    elif contact.o1.getNodeType() == defs.GEOM_TRIANGLE:
-        obj = Triangle2(np.zeros(3), np.zeros(3), np.zeros(3))
-        memcpy(obj.thisptr, contact.o1, sizeof(defs.Triangle2))
-        c.o1 = obj
-
-    if contact.o2.getNodeType() == defs.GEOM_BOX:
-        obj = Box(0, 0, 0)
-        memcpy(obj.thisptr, contact.o2, sizeof(defs.Box))
-        c.o2 = obj
-    elif contact.o2.getNodeType() == defs.GEOM_SPHERE:
-        obj = Sphere(0)
-        memcpy(obj.thisptr, contact.o2, sizeof(defs.Sphere))
-        c.o2 = obj
-    elif contact.o2.getNodeType() == defs.GEOM_CAPSULE:
-        obj = Capsule(0, 0)
-        memcpy(obj.thisptr, contact.o2, sizeof(defs.Capsule))
-        c.o2 = obj
-    elif contact.o2.getNodeType() == defs.GEOM_CONE:
-        obj = Cone(0, 0)
-        memcpy(obj.thisptr, contact.o2, sizeof(defs.Cone))
-        c.o2 = obj
-    elif contact.o2.getNodeType() == defs.GEOM_CYLINDER:
-        obj = Cylinder(0, 0)
-        memcpy(obj.thisptr, contact.o2, sizeof(defs.Cylinder))
-        c.o2 = obj
-    elif contact.o2.getNodeType() == defs.GEOM_TRIANGLE:
-        obj = Triangle2(np.zeros(3), np.zeros(3), np.zeros(3))
-        memcpy(obj.thisptr, contact.o2, sizeof(defs.Triangle2))
-        c.o2 = obj
+    c.o1 = c_to_python_collision_geometry(contact.o1)
+    c.o2 = c_to_python_collision_geometry(contact.o2)
     c.b1 = contact.b1
     c.b2 = contact.b2
     c.normal = vec3f_to_list(contact.normal)
@@ -325,7 +385,7 @@ cdef python_to_c_contact(defs.Contact contact):
     c.penetration_depth = contact.penetration_depth
     return c
 
-cdef python_to_c_costsource(defs.CostSource cost_source):
+cdef c_to_python_costsource(defs.CostSource cost_source):
     c = CostSource()
     c.aabb_min = vec3f_to_list(cost_source.aabb_min)
     c.aabb_max = vec3f_to_list(cost_source.aabb_max)
@@ -349,7 +409,7 @@ def collide(CollisionObject o1, CollisionObject o2, request):
     cdef vector[defs.CostSource] costs
     result.getCostSources(costs)
     for idx in range(contacts.size()):
-        col_res.contacts.append(python_to_c_contact(contacts[idx]))
+        col_res.contacts.append(c_to_python_contact(contacts[idx]))
     for idx in range(costs.size()):
-        col_res.cost_sources.append(python_to_c_costsource(costs[idx]))
+        col_res.cost_sources.append(c_to_python_costsource(costs[idx]))
     return ret, col_res

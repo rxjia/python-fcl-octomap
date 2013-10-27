@@ -165,7 +165,7 @@ class Transform:
         else:
             self.t = np.zeros(3)
 
-        if not rot is None:
+        if rot is None:
             self.q = Quaternion()
         elif isinstance(rot ,Quaternion):
             self.q = rot

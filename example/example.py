@@ -11,6 +11,15 @@ print "After register 1 : ", manager.size()
 manager.registerObject(fcl.CollisionObject(fcl.Cylinder(7.0, 8.0)))
 print "After register 2 : ", manager.size()
 
+def cb_func(obj1, obj2, res):
+    print "cb_func start"
+    ret, res = fcl.collide(obj1, obj2, fcl.CollisionRequest())
+    print "result: ", ret
+    return ret
+res = fcl.CollisionResult()
+manager.collide(res, cb_func)
+
+
 ret, result = fcl.collide(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
                                               transform.Transform(transform.Quaternion(), [10.0, 0.0, 0.0])),
                           fcl.CollisionObject(fcl.Sphere(4.0),

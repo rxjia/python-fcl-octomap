@@ -6,13 +6,51 @@ from libc.stdlib cimport free
 from libc.string cimport memcpy
 from cython.operator cimport dereference as deref, preincrement as inc, address
 cimport fcl_defs as defs
+cimport octomap_defs
+import inspect
 import numpy as np
 import transform as tf
 from collision_data import *
 cimport numpy as np
 ctypedef np.float64_t DOUBLE_t
 
+cdef class CollisionFunction:
+    cdef:
+        object py_func
+        object py_args
 
+    def __init__(self, py_func, py_args):
+        self.py_func = py_func
+        self.py_args = py_args
+    cdef bool eval_func(self, defs.CollisionObject* o1, defs.CollisionObject* o2):
+        cdef object py_r = defs.PyObject_CallObject(self.py_func,
+                                                    (copy_ptr_collision_object(o1),
+                                                     copy_ptr_collision_object(o2),
+                                                     self.py_args))
+        return <bool?>py_r
+
+cdef class DistanceFunction:
+    cdef:
+        object py_func
+        object py_args
+
+    def __init__(self, py_func, py_args):
+        self.py_func = py_func
+        self.py_args = py_args
+
+    cdef bool eval_func(self, defs.CollisionObject* o1, defs.CollisionObject* o2, double& dist):
+        cdef object py_r = defs.PyObject_CallObject(self.py_func,
+                                                    (copy_ptr_collision_object(o1),
+                                                     copy_ptr_collision_object(o2),
+                                                     self.py_args))
+        dist = <double?>py_r[1]
+        return <bool?>py_r[0]
+
+cdef inline bool CollisionCallBack(defs.CollisionObject* o1, defs.CollisionObject* o2, void* cdata):
+    return (<CollisionFunction>cdata).eval_func(o1, o2)
+
+cdef inline bool DistanceCallBack(defs.CollisionObject* o1, defs.CollisionObject* o2, void* cdata, double& dist):
+    return (<DistanceFunction>cdata).eval_func(o1, o2, dist)
 
 cdef vec3f_to_tuple(defs.Vec3f vec):
     return (vec[0], vec[1], vec[2])
@@ -20,12 +58,17 @@ cdef vec3f_to_tuple(defs.Vec3f vec):
 cdef vec3f_to_list(defs.Vec3f vec):
     return [vec[0], vec[1], vec[2]]
 
+cdef c_to_python_quaternion(defs.Quaternion3f q):
+    return tf.Quaternion(q.getW(), q.getX(), q.getY(), q.getZ())
+
 cdef class CollisionObject:
     cdef defs.CollisionObject *thisptr
     cdef defs.PyObject *geom
-    def __cinit__(self, CollisionGeometry geom=CollisionGeometry(), tf=None):
+    cdef bool _no_instance
+    def __cinit__(self, CollisionGeometry geom=CollisionGeometry(), tf=None, _no_instance=False):
         defs.Py_INCREF(<defs.PyObject*>geom)
         self.geom = <defs.PyObject*>geom
+        self._no_instance = _no_instance
         if not geom.getNodeType() is None:
             if not tf is None:
                 self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](geom.thisptr),
@@ -39,9 +82,10 @@ cdef class CollisionObject:
             else:
                 self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](geom.thisptr))
         else:
-            raise ValueError
+            if not self._no_instance:
+                raise ValueError
     def __dealloc__(self):
-        if self.thisptr:
+        if self.thisptr and not self._no_instance:
             free(self.thisptr)
         defs.Py_DECREF(self.geom)
     def getObjectType(self):
@@ -52,7 +96,7 @@ cdef class CollisionObject:
         return vec3f_to_tuple(self.thisptr.getTranslation())
     def getQuatRotation(self):
         cdef defs.Quaternion3f quat = self.thisptr.getQuatRotation()
-        return tf.Quaternion(quat.getW(), quat.getX(), quat.getY(), quat.getZ())
+        return c_to_python_quaternion(quat)
     def setTranslation(self, vec):
         self.thisptr.setTranslation(defs.Vec3f(<double?>vec[0], <double?>vec[1], <double?>vec[2]))
     def setQuatRotation(self, q):
@@ -241,18 +285,44 @@ class Contact:
 
 cdef class DynamicAABBTreeCollisionManager:
     cdef defs.DynamicAABBTreeCollisionManager *thisptr
+    cdef vector[defs.PyObject*]* objs
     def __cinit__(self):
         self.thisptr = new defs.DynamicAABBTreeCollisionManager()
+        self.objs = new vector[defs.PyObject*]()
     def __dealloc__(self):
         if self.thisptr:
             del self.thisptr
+        for idx in range(self.objs.size()):
+            defs.Py_DECREF(deref(self.objs)[idx])
     def registerObjects(self, other_objs):
         cdef vector[defs.CollisionObject*] pobjs
         for o in other_objs:
+            defs.Py_INCREF(<defs.PyObject*>o)
+            self.objs.push_back(<defs.PyObject*>o)
             pobjs.push_back((<CollisionObject?>o).thisptr)
         self.thisptr.registerObjects(pobjs)
     def registerObject(self, CollisionObject obj):
+        defs.Py_INCREF(<defs.PyObject*>obj)
+        self.objs.push_back(<defs.PyObject*>obj)
         self.thisptr.registerObject(obj.thisptr)
+    def collide(self, *args):
+        if len(args) == 2 and inspect.isfunction(args[1]):
+            fn = CollisionFunction(args[1], args[0])
+            self.thisptr.collide(<void*>fn, CollisionCallBack)
+        elif len(args) == 3 and inspect.isfunction(args[2]):
+            fn = CollisionFunction(args[2], args[1])
+            self.thisptr.collide((<CollisionObject?>args[0]).thisptr, <void*>fn, CollisionCallBack)
+        else:
+            raise ValueError
+    def distance(self, *args):
+        if len(args) == 2 and inspect.isfunction(args[1]):
+            fn = DistanceFunction(args[1], args[0])
+            self.thisptr.distance(<void*>fn, DistanceCallBack)
+        elif len(args) == 3 and inspect.isfunction(args[2]):
+            fn = DistanceFunction(args[2], args[1])
+            self.thisptr.distance((<CollisionObject?>args[0]).thisptr, <void*>fn, DistanceCallBack)
+        else:
+            raise ValueError
     def setup(self):
         self.thisptr.setup()
     def update(self, arg=None):
@@ -340,6 +410,11 @@ cdef c_to_python_collision_geometry(defs.const_CollisionGeometry* geom):
         obj = Plane(np.zeros(3), 0)
         memcpy(obj.thisptr, geom, sizeof(defs.Plane))
         return obj
+
+cdef copy_ptr_collision_object(defs.CollisionObject* cobj):
+    co = CollisionObject(_no_instance=True)
+    (<CollisionObject>co).thisptr = cobj
+    return co
 
 cdef c_to_python_contact(defs.Contact contact):
     c = Contact()

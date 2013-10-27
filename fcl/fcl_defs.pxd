@@ -7,6 +7,8 @@ cdef extern from "Python.h":
        ctypedef struct PyObject
        void Py_INCREF(PyObject *obj)
        void Py_DECREF(PyObject *obj)
+       object PyObject_CallObject(object obj, object args)
+       object PySequence_Concat(object obj1, object obj2)
 
 cdef extern from "boost/shared_ptr.hpp" namespace "boost":
     cppclass shared_ptr[T]:
@@ -101,8 +103,6 @@ cdef extern from "fcl/collision_object.h" namespace "fcl":
         FCL_REAL threshold_occupied
         FCL_REAL threshold_free
 
-    ctypedef CollisionGeometry const_CollisionGeometry "const fcl::CollisionGeometry"
-
     cdef cppclass CollisionObject:
         CollisionObject() except +
         CollisionObject(shared_ptr[CollisionGeometry]& cgeom_) except +
@@ -112,12 +112,16 @@ cdef extern from "fcl/collision_object.h" namespace "fcl":
         Vec3f& getTranslation()
         Matrix3f& getRotation()
         Quaternion3f& getQuatRotation()
+        CollisionGeometry* getCollisionGeometry()
         void setTranslation(Vec3f& T)
         void setQuatRotation(Quaternion3f& q)
         void setTransform(Quaternion3f& q, Vec3f& T)
         bool isOccupied()
         bool isFree()
         bool isUncertain()
+
+    ctypedef CollisionGeometry const_CollisionGeometry "const fcl::CollisionGeometry"
+    ctypedef CollisionObject const_CollisionObject "const fcl::CollisionObject"
 
 cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
     cdef cppclass ShapeBase(CollisionGeometry):

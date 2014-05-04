@@ -83,6 +83,18 @@ cdef extern from "fcl/collision_data.h" namespace "fcl":
                          size_t num_max_cost_sources_,
                          bool enable_cost_,
                          bool use_approximate_cost_)
+    cdef cppclass DistanceResult:
+        FCL_REAL min_distance
+        Vec3f* nearest_points
+        CollisionGeometry* o1
+        CollisionGeometry* o2
+        int b1
+        int b2
+        DistanceResult(FCL_REAL min_distance_) except +
+        DistanceResult() except +
+    cdef cppclass DistanceRequest:
+        bool enable_nearest_points
+        DistanceRequest(bool enable_nearest_points_) except +
 
 cdef extern from "fcl/collision_object.h" namespace "fcl":
     cdef enum OBJECT_TYPE:
@@ -209,3 +221,10 @@ cdef extern from "fcl/collision.h" namespace "fcl":
                    CollisionGeometry* o2, Transform3f& tf2,
                    CollisionRequest& request,
                    CollisionResult& result)
+
+cdef extern from "fcl/distance.h" namespace "fcl":
+    FCL_REAL distance(CollisionObject* o1, CollisionObject* o2,
+                      DistanceRequest& request, DistanceResult& result)
+    FCL_REAL distance(CollisionGeometry* o1, Transform3f& tf1,
+                      CollisionGeometry* o2, Transform3f& tf2,
+                      DistanceRequest& request, DistanceResult& result)

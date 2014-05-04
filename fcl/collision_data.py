@@ -1,3 +1,4 @@
+import sys
 
 class OBJECT_TYPE:
     OT_UNKNOWN, OT_BVH, OT_GEOM, OT_OCTREE, OT_COUNT = range(5)
@@ -34,3 +35,17 @@ class CollisionRequest:
         self.num_max_cost_sources = num_max_cost_sources
         self.enable_cost = enable_cost
         self.use_approximate_cost = use_approximate_cost
+
+class DistanceResult:
+    def __init__(self, min_distance_ = sys.float_info.max):
+        self.min_distance = min_distance_
+        self.nearest_points = [None, None]
+        self.o1 = None
+        self.o2 = None
+        self.b1 = -1
+        self.b2 = -1
+
+class DistanceRequest:
+    def __init__(self,
+                 enable_nearest_points_ = False):
+        self.enable_nearest_points = enable_nearest_points_

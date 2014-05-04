@@ -27,21 +27,40 @@ ret, result = fcl.collide(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
                           fcl.CollisionObject(fcl.Sphere(4.0),
                                               transform.Transform(transform.Quaternion(), [-10.0, 0.0, 0.0])),
                           fcl.CollisionRequest())
-print ret
+
+print "-- Collision result: ", ret
 for contact in result.contacts:
     print contact.o1
     print contact.o2
 for cost_source in result.cost_sources:
     print cost_source
 
+dis, result = fcl.distance(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
+                                               transform.Transform(transform.Quaternion(), [10.0, 0.0, 0.0])),
+                           fcl.CollisionObject(fcl.Sphere(4.0),
+                                               transform.Transform(transform.Quaternion(), [-10.0, 0.0, 0.0])),
+                           fcl.DistanceRequest(True))
+
+print "-- Distance result: ", dis
+print result.nearest_points
+
 ret, result = fcl.collide(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
                                               transform.Transform(transform.Quaternion())),
                           fcl.CollisionObject(fcl.Sphere(4.0),
                                               transform.Transform(transform.Quaternion(), [0.0, 0.0, 0.0])),
                           fcl.CollisionRequest())
-print ret
+print "-- Collision result: ", ret
 for contact in result.contacts:
     print contact.o1
     print contact.o2
 for cost_source in result.cost_sources:
     print cost_source
+
+dis, result = fcl.distance(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
+                                               transform.Transform(transform.Quaternion())),
+                           fcl.CollisionObject(fcl.Sphere(4.0),
+                                               transform.Transform(transform.Quaternion(), [0.0, 0.0, 0.0])),
+                           fcl.DistanceRequest(True))
+
+print "-- Distance result: ", dis
+print result.nearest_points

@@ -455,3 +455,19 @@ def collide(CollisionObject o1, CollisionObject o2, request):
     for idx in range(costs.size()):
         col_res.cost_sources.append(c_to_python_costsource(costs[idx]))
     return ret, col_res
+
+def distance(CollisionObject o1, CollisionObject o2, request):
+    cdef defs.DistanceResult result
+    cdef double dis = defs.distance(o1.thisptr,
+                                    o2.thisptr,
+                                    defs.DistanceRequest(<bool?>request.enable_nearest_points),
+                                    result)
+    dis_res = DistanceResult()
+    dis_res.min_distance = result.min_distance
+    dis_res.nearest_points = [vec3f_to_tuple(result.nearest_points[0]),
+                              vec3f_to_tuple(result.nearest_points[1])]
+    dis_res.o1 = c_to_python_collision_geometry(result.o1)
+    dis_res.o2 = c_to_python_collision_geometry(result.o2)
+    dis_res.b1 = result.b1
+    dis_res.b2 = result.b2
+    return dis, dis_res

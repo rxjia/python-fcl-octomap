@@ -1,8 +1,10 @@
 import numpy as np
 
 class Interval:
-    def __init__(self, left, right=None):
-        if getattr(left, '__iter__', False):
+    def __init__(self, left=None, right=None):
+        if left is None:
+            self.i = np.zeros(2)
+        elif getattr(left, '__iter__', False):
             self.i = np.array(left[:2])
         else:
             self.i = np.zeros(2)
@@ -38,11 +40,25 @@ class Interval:
         return np.array_equal(other)
 
     def __add__(self, other):
-        return Interval(self.i + other.i)
+        if isinstance(other, Interval):
+            return Interval(self.i + other.i)
+        else:
+            return Interval(self.i[0] + other, self.i[1] + other)
+
+    __radd__ = __add__
+    __iadd__ = __add__
 
     def __sub__(self, other):
-        return Interval(self.i[0] - other.i[1],
-                        self.i[1] - other.i[0])
+        if isinstance(other, Interval):
+            return Interval(self.i[0] - other.i[1],
+                            self.i[1] - other.i[0])
+        else:
+            return Interval(self.i[0] - other, self.i[1] - other)
+
+    def __rsub__(self, other):
+        return Interval(other - self.i[0], other - self.i[1])
+
+    __isub__ = __sub__
 
     def __mul__(self, other):
         if isinstance(other, Interval):
@@ -86,11 +102,26 @@ class Interval:
             else:
                 return Interval(self.i * other)
 
+    __rmul__ = __mul__
+
+    __imul__ = __mul__
+
     def __div__(self, other):
         if isinstance(other, Interval):
             return self * Interval(1.0 / other.i[1], 1.0 / other.i[0])
         else:
             return self * (1.0 / other)
+
+    def __rdiv__(self, other):
+        return Interval(other / self.i[1], other / self.i[0])
+
+    __idiv__ = __div__
+
+    def __pow__(self, other):
+        ans = Interval(self)
+        for _ in range(other - 1):
+            ans *= self
+        return ans
 
     def overlap(self, other):
         if self.i[1] < other.i[0]:
@@ -169,3 +200,14 @@ def bound(i, other):
         if other > res.i[1]:
             res.i[1] = other
         return res
+
+class TimeInterval:
+    def __init__(self, l, r):
+        self.setValue(l, r)
+    def setValue(self, l, r):
+        self.t = Interval(l, r)
+        self.t2 = Interval(l * self.t[0], r * self.t[1])
+        self.t3 = Interval(l * self.t2[0], r * self.t2[1])
+        self.t4 = Interval(l * self.t3[0], r * self.t3[1])
+        self.t5 = Interval(l * self.t4[0], r * self.t4[1])
+        self.t6 = Interval(l * self.t5[0], r * self.t5[1])

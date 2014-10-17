@@ -6,7 +6,6 @@ from libc.stdlib cimport free
 from libc.string cimport memcpy
 from cython.operator cimport dereference as deref, preincrement as inc, address
 cimport fcl_defs as defs
-cimport octomap_defs
 import inspect
 import numpy as np
 import transform as tf

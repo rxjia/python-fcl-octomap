@@ -37,7 +37,7 @@ cdef class DistanceFunction:
         self.py_func = py_func
         self.py_args = py_args
 
-    cdef bool eval_func(self, defs.CollisionObject* o1, defs.CollisionObject* o2, double& dist):
+    cdef bool eval_func(self, defs.CollisionObject* o1, defs.CollisionObject* o2, double dist):
         cdef object py_r = defs.PyObject_CallObject(self.py_func,
                                                     (copy_ptr_collision_object(o1),
                                                      copy_ptr_collision_object(o2),
@@ -48,7 +48,7 @@ cdef class DistanceFunction:
 cdef inline bool CollisionCallBack(defs.CollisionObject* o1, defs.CollisionObject* o2, void* cdata):
     return (<CollisionFunction>cdata).eval_func(o1, o2)
 
-cdef inline bool DistanceCallBack(defs.CollisionObject* o1, defs.CollisionObject* o2, void* cdata, double& dist):
+cdef inline bool DistanceCallBack(defs.CollisionObject* o1, defs.CollisionObject* o2, void* cdata, double dist):
     return (<DistanceFunction>cdata).eval_func(o1, o2, dist)
 
 cdef vec3f_to_tuple(defs.Vec3f vec):
@@ -287,7 +287,7 @@ cdef class DynamicAABBTreeCollisionManager:
     cdef vector[defs.PyObject*]* objs
     def __cinit__(self):
         self.thisptr = new defs.DynamicAABBTreeCollisionManager()
-        self.objs = new vector[defs.PyObject*]()
+        self.objs = new vector[defs.PyObject*   ]()
     def __dealloc__(self):
         if self.thisptr:
             del self.thisptr

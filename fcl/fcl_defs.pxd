@@ -139,8 +139,8 @@ cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
     cdef cppclass ShapeBase(CollisionGeometry):
         ShapeBase() except +
 
-    cdef cppclass Triangle2(ShapeBase):
-        Triangle2(Vec3f& a_, Vec3f& b_, Vec3f& c_) except +
+    cdef cppclass TriangleP(ShapeBase):
+        TriangleP(Vec3f& a_, Vec3f& b_, Vec3f& c_) except +
         Vec3f a, b, c
 
     cdef cppclass Box(ShapeBase):

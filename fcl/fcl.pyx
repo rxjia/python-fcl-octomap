@@ -313,15 +313,15 @@ cdef class DynamicAABBTreeCollisionManager:
             self.thisptr.collide((<CollisionObject?>args[0]).thisptr, <void*>fn, CollisionCallBack)
         else:
             raise ValueError
-    def distance(self, *args):
-        if len(args) == 2 and inspect.isfunction(args[1]):
-            fn = DistanceFunction(args[1], args[0])
-            self.thisptr.distance(<void*>fn, DistanceCallBack)
-        elif len(args) == 3 and inspect.isfunction(args[2]):
-            fn = DistanceFunction(args[2], args[1])
-            self.thisptr.distance((<CollisionObject?>args[0]).thisptr, <void*>fn, DistanceCallBack)
-        else:
-            raise ValueError
+    # def distance(self, *args):
+    #     if len(args) == 2 and inspect.isfunction(args[1]):
+    #         fn = DistanceFunction(args[1], args[0])
+    #         self.thisptr.distance(<void*>fn, DistanceCallBack)
+    #     elif len(args) == 3 and inspect.isfunction(args[2]):
+    #         fn = DistanceFunction(args[2], args[1])
+    #         self.thisptr.distance((<CollisionObject?>args[0]).thisptr, <void*>fn, DistanceCallBack)
+    #     else:
+    #         raise ValueError
     def setup(self):
         self.thisptr.setup()
     def update(self, arg=None):

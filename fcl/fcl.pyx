@@ -3,9 +3,9 @@ from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libc.stdlib cimport free
 from libc.string cimport memcpy
+import inspect
 from cython.operator cimport dereference as deref, preincrement as inc, address
 cimport fcl_defs as defs
-import inspect
 import transform as tf
 from collision_data import *
 cimport numpy as np
@@ -279,17 +279,6 @@ class Contact:
         self.normal = [0.0, 0.0, 0.0]
         self.pos = [0.0, 0.0, 0.0]
         self.penetration_depth = 0.0
-
-# cdef class BVHModel(CollisionGeometry):
-cdef class BVHModel:
-    cdef defs.BVHModel *thisptr
-    def __cinit__(self):
-        self.thisptr = new defs.BVHModel()
-
-cdef class OBBRSS:
-    cdef defs.OBBRSS *thisptr
-    def __cinit__(self, n, d):
-        self.thisptr = new defs.OBBRSS()
 
 cdef class DynamicAABBTreeCollisionManager:
     cdef defs.DynamicAABBTreeCollisionManager *thisptr

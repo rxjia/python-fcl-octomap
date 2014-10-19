@@ -7,7 +7,6 @@ from libc.string cimport memcpy
 from cython.operator cimport dereference as deref, preincrement as inc, address
 cimport fcl_defs as defs
 import inspect
-import numpy as np
 import transform as tf
 from collision_data import *
 cimport numpy as np
@@ -42,7 +41,7 @@ cdef class DistanceFunction:
                                                     (copy_ptr_collision_object(o1),
                                                      copy_ptr_collision_object(o2),
                                                      self.py_args))
-        dist = <double?>py_r[1]
+        (&dist)[0] = <defs.FCL_REAL?>py_r[1]
         return <bool?>py_r[0]
 
 cdef inline bool CollisionCallBack(defs.CollisionObject* o1, defs.CollisionObject* o2, void* cdata):
@@ -313,17 +312,20 @@ cdef class DynamicAABBTreeCollisionManager:
             self.thisptr.collide((<CollisionObject?>args[0]).thisptr, <void*>fn, CollisionCallBack)
         else:
             raise ValueError
-    # def distance(self, *args):
-    #     if len(args) == 2 and inspect.isfunction(args[1]):
-    #         fn = DistanceFunction(args[1], args[0])
-    #         self.thisptr.distance(<void*>fn, DistanceCallBack)
-    #     elif len(args) == 3 and inspect.isfunction(args[2]):
-    #         fn = DistanceFunction(args[2], args[1])
-    #         self.thisptr.distance((<CollisionObject?>args[0]).thisptr, <void*>fn, DistanceCallBack)
-    #     else:
-    #         raise ValueError
+
+    def distance(self, *args):
+        if len(args) == 2 and inspect.isfunction(args[1]):
+            fn = DistanceFunction(args[1], args[0])
+            self.thisptr.distance(<void*> fn, DistanceCallBack)
+        elif len(args) == 3 and inspect.isfunction(args[2]):
+            fn = DistanceFunction(args[2], args[1])
+            self.thisptr.distance((<CollisionObject?> args[0]).thisptr, <void*> fn, DistanceCallBack)
+        else:
+            raise ValueError
+
     def setup(self):
         self.thisptr.setup()
+
     def update(self, arg=None):
         cdef vector[defs.CollisionObject*] objs
         if hasattr(arg, "__len__"):

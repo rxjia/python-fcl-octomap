@@ -228,3 +228,9 @@ cdef extern from "fcl/distance.h" namespace "fcl":
     FCL_REAL distance(CollisionGeometry* o1, Transform3f& tf1,
                       CollisionGeometry* o2, Transform3f& tf2,
                       DistanceRequest& request, DistanceResult& result)
+
+cdef extern from "fcl/BVH/BVH_internal.h" namespace "fcl":
+    cdef enum BVHModelType:
+        BVH_MODEL_UNKNOWN,   # unknown model type
+        BVH_MODEL_TRIANGLES, # triangle model
+        BVH_MODEL_POINTCLOUD # point cloud model

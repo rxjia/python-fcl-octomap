@@ -6,9 +6,8 @@ from libc.string cimport memcpy
 from cython.operator cimport dereference as deref, preincrement as inc, address
 cimport fcl_defs as defs
 import inspect
-from fcl.collision_data import CostSource, CollisionResult, DistanceResult
 import transform as tf
-
+from collision_data import *
 cimport numpy as np
 ctypedef np.float64_t DOUBLE_t
 
@@ -41,7 +40,7 @@ cdef class DistanceFunction:
                                                     (copy_ptr_collision_object(o1),
                                                      copy_ptr_collision_object(o2),
                                                      self.py_args))
-        # dist = <defs.FCL_REAL?>py_r[1]
+        (&dist)[0] = <defs.FCL_REAL?>py_r[1]
         return <bool?>py_r[0]
 
 cdef inline bool CollisionCallBack(defs.CollisionObject*o1, defs.CollisionObject*o2, void*cdata):

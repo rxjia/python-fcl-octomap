@@ -256,51 +256,50 @@ cdef extern from "fcl/BVH/BV_fitter.h" namespace "fcl":
     cdef cppclass BVFitterBase:
         pass
 
-cdef extern from "fcl/BV/RSS.h" namespace "fcl":
-    cdef cppclass RSS:
-        Vec3f axis #[3]
-        Vec3f Tr
-        FCL_REAL l #[2]
-        FCL_REAL r
-
-cdef extern from "fcl/BV/OBB.h" namespace "fcl":
-    cdef cppclass OBB:
-        Vec3f axis #[3]
-        Vec3f To
-        Vec3f extent
+# cdef extern from "fcl/BV/RSS.h" namespace "fcl":
+#     cdef cppclass RSS:
+#         Vec3f axis #[3]
+#         Vec3f Tr
+#         FCL_REAL l #[2]
+#         FCL_REAL r
+#
+# cdef extern from "fcl/BV/OBB.h" namespace "fcl":
+#     cdef cppclass OBB:
+#         Vec3f axis #[3]
+#         Vec3f To
+#         Vec3f extent
 
 cdef extern from "fcl/BV/OBBRSS.h" namespace "fcl":
     cdef cppclass OBBRSS:
-        OBB obb
-        RSS rss
+        pass
 
 cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
     # cdef cppclass BVHModel(CollisionGeometry)[OBBRSS obbrss]:
     cdef cppclass BVHModel[OBBRSS]:
         # Constructing an empty BVH
         BVHModel() except +
-        # BVHModel(BVHModel& other)
-
-        #Geometry point data
-        Vec3f* vertices
-
-        #Geometry triangle index data, will be NULL for point clouds
-        Triangle* tri_indices
-
-        #Geometry point data in previous frame
-        Vec3f* prev_vertices
-
-        #Number of triangles
-        int num_tris
-
-        #Number of points
-        int num_vertices
-
-        #The state of BVH building process
-        BVHBuildState build_state
-
-        # #Split rule to split one BV node into two children
-
+        BVHModel(BVHModel& other) except +
+        #
+        # #Geometry point data
+        # Vec3f* vertices
+        #
+        # #Geometry triangle index data, will be NULL for point clouds
+        # Triangle* tri_indices
+        #
+        # #Geometry point data in previous frame
+        # Vec3f* prev_vertices
+        #
+        # #Number of triangles
+        # int num_tris
+        #
+        # #Number of points
+        # int num_vertices
+        #
+        # #The state of BVH building process
+        # BVHBuildState build_state
+        #
+        # # #Split rule to split one BV node into two children
+        #
         # boost::shared_ptr<BVSplitterBase<BV> > bv_splitter
         shared_ptr[BVSplitterBase] bv_splitter
         # boost::shared_ptr<BVFitterBase<BV> > bv_fitter

@@ -280,6 +280,17 @@ class Contact:
         self.pos = [0.0, 0.0, 0.0]
         self.penetration_depth = 0.0
 
+# cdef class BVHModel(CollisionGeometry):
+cdef class BVHModel:
+    cdef defs.BVHModel *thisptr
+    def __cinit__(self):
+        self.thisptr = new defs.BVHModel()
+
+cdef class OBBRSS:
+    cdef defs.OBBRSS *thisptr
+    def __cinit__(self, n, d):
+        self.thisptr = new defs.OBBRSS()
+
 cdef class DynamicAABBTreeCollisionManager:
     cdef defs.DynamicAABBTreeCollisionManager *thisptr
     cdef vector[defs.PyObject*]*objs

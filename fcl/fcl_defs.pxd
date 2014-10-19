@@ -269,34 +269,42 @@ cdef extern from "fcl/BVH/BV_fitter.h" namespace "fcl":
 #         Vec3f To
 #         Vec3f extent
 
-cdef extern from "fcl/BV/OBBRSS.h" namespace "fcl":
-    cdef cppclass OBBRSS:
-        pass
+# cdef extern from "fcl/BV/OBBRSS.h" namespace "fcl":
+#     cdef cppclass OBBRSS:
+#         pass
+#
+# cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
+#     ctypedef OBBRSS myOBBRSS "fcl::OBBRSS"
+#     cdef
+
+# cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
+
 
 cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
-    # cdef cppclass BVHModel(CollisionGeometry)[OBBRSS obbrss]:
-    cdef cppclass BVHModel[OBBRSS]:
+    # Cython only accepts type template parameters.
+    # see https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs
+    cdef cppclass BVHModel "fcl::BVHModel<fcl::OBBRSS>" ( CollisionGeometry ):
         # Constructing an empty BVH
         BVHModel() except +
         BVHModel(BVHModel& other) except +
         #
-        # #Geometry point data
-        # Vec3f* vertices
+        #Geometry point data
+        Vec3f* vertices
         #
-        # #Geometry triangle index data, will be NULL for point clouds
-        # Triangle* tri_indices
+        #Geometry triangle index data, will be NULL for point clouds
+        Triangle* tri_indices
         #
-        # #Geometry point data in previous frame
-        # Vec3f* prev_vertices
+        #Geometry point data in previous frame
+        Vec3f* prev_vertices
         #
-        # #Number of triangles
-        # int num_tris
+        #Number of triangles
+        int num_tris
         #
-        # #Number of points
-        # int num_vertices
+        #Number of points
+        int num_vertices
         #
-        # #The state of BVH building process
-        # BVHBuildState build_state
+        #The state of BVH building process
+        BVHBuildState build_state
         #
         # # #Split rule to split one BV node into two children
         #

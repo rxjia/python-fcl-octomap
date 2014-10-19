@@ -1,7 +1,7 @@
 import sys
 from unittest import TestCase
 from fcl import fcl, transform
-
+from fcl import collision_data as cd
 
 class Test_FCL(TestCase):
     def setUp(self):
@@ -10,7 +10,7 @@ class Test_FCL(TestCase):
                      fcl.CollisionObject(fcl.Cone(5.0, 6.0))]
 
         self.manager = fcl.DynamicAABBTreeCollisionManager()
-        self.res = fcl.CollisionResult()
+        self.res = cd.CollisionResult()
         # self.manager.collide(self.res, self.collide_callback_func)
 
         self._side = (1.0, 2.0, 3.0)
@@ -38,13 +38,13 @@ class Test_FCL(TestCase):
         self.assertTrue(self.manager.size() == _size)
 
     def collide_callback_func(obj1, obj2, res):
-        ret, res = fcl.collide(obj1, obj2, fcl.CollisionRequest())
+        ret, res = fcl.collide(obj1, obj2, cd.CollisionRequest())
         return ret
 
     def test_distance_box_sphere_translated(self):
         ret, result = fcl.collide(fcl.CollisionObject(self.box, self.trans1),
                                   fcl.CollisionObject(self.sphere, self.trans2),
-                                  fcl.CollisionRequest()
+                                  cd.CollisionRequest()
         )
 
         self.assertEqual(result.contacts, [])
@@ -52,7 +52,7 @@ class Test_FCL(TestCase):
 
         dis, result = fcl.distance(fcl.CollisionObject(self.box, self.trans1),
                                    fcl.CollisionObject(self.sphere, self.trans2),
-                                   fcl.DistanceRequest(True)
+                                   cd.DistanceRequest(True)
         )
 
         self.assertEqual(dis, self._ref_dist)
@@ -66,7 +66,7 @@ class Test_FCL(TestCase):
                                                       transform.Transform(transform.Quaternion())),
                                   fcl.CollisionObject(fcl.Sphere(self._radius),
                                                       transform.Transform(transform.Quaternion(), [0.0, 0.0, 0.0])),
-                                  fcl.CollisionRequest())
+                                  cd.CollisionRequest())
 
         self.assertTrue(len(result.contacts) == 1)
         self.assertTrue(len(result.cost_sources) == 0)
@@ -80,7 +80,7 @@ class Test_FCL(TestCase):
     def test_collision_and_distance_box_sphere(self):
         dis, result = fcl.distance(fcl.CollisionObject(self.box, self.trans1),
                                    fcl.CollisionObject(self.sphere, self.trans2),
-                                   fcl.DistanceRequest(True)
+                                   cd.DistanceRequest(True)
         )
 
         self.assertEqual(dis, self._ref_dist)
@@ -92,7 +92,7 @@ class Test_FCL(TestCase):
         dis, result = fcl.distance(fcl.CollisionObject(self.box, transform.Transform(transform.Quaternion())),
                                    fcl.CollisionObject(self.sphere,
                                                        transform.Transform(transform.Quaternion(), [0.0, 0.0, 0.0])),
-                                   fcl.DistanceRequest(True)
+                                   cd.DistanceRequest(True)
         )
 
         self.assertEqual(dis, -1.0)
@@ -124,7 +124,7 @@ class Test_FCL(TestCase):
         # ....Warning: distance function between node type 9 and node type 17 is not supported
         # dis, result = fcl.distance(collision_object, p, fcl.DistanceRequest(True))
 
-        ret, result = fcl.collide(collision_object, p, fcl.CollisionRequest())
+        ret, result = fcl.collide(collision_object, p, cd.CollisionRequest())
         # Warning: collision function between node type 9 and node type 17 is not supported
         self.assertTrue(ret==0)
 

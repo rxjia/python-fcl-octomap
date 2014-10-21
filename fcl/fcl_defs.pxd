@@ -313,4 +313,6 @@ cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
         # boost::shared_ptr<BVFitterBase<BV> > bv_fitter
         shared_ptr[BVFitterBase] bv_fitter
 
+        Vec3f addVertex(const Vec3f& p)
+
 

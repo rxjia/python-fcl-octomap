@@ -1,8 +1,11 @@
 from libcpp cimport bool
 from cython.operator cimport dereference as deref, preincrement as inc, address
 cimport fcl_defs as defs
+cimport fcl
 cimport numpy as np
 ctypedef np.float64_t DOUBLE_t
+
+
 
 #-------------------------------------------------------------------------------
 # templates are handled pretty ugly...
@@ -14,32 +17,60 @@ cdef class BVHModel:
     def __cinit__(self):
         self.thisptr = new defs.BVHModel()
 
-    def node(self):
-        return self.thisptr.getNodeType()
+    def __dealloc__(self):
+        if self.thisptr:
+            del self.thisptr
 
-    #     # return self.thisptr.getNodeType()
+    def num_tries_(self):
+        return self.thisptr.num_tris
+
+    def buildState(self):
+        return self.thisptr.build_state
+
+    def addVertex(self, x,y,z):
+        self.thisptr.addVertex( defs.Vec3f(<double?>x, <double?>y, <double?>z, ) )
+
+
+    # def getNodeType(self):
+    #     if self.thisptr:
+    #         return self.thisptr.getNodeType()
+    #     else:
+    #         return None
     #
-    # property xxx:
+    # def computeLocalAABB(self):
+    #     if self.thisptr:
+    #         self.thisptr.computeLocalAABB()
+    #     else:
+    #         return None
+
+    # def beginModel( self, num_tris_, num_vertices_):
+    #     self.thisptr.beginModel(<int?>num_tris_, <int?>num_vertices_)
+
+    # property aabb_center:
     #     def __get__(self):
-    #         # return self.thisptr.num_tris
-    #         # return self.thisptr.num_tris
-    #         return (<defs.BVHModel*> self.thisptr).num_tris
+    #         if self.thisptr:
+    #             return fcl.vec3f_to_tuple(self.thisptr.aabb_center)
+    #         else:
+    #             return None
     #     def __set__(self, value):
-    #         self.num_tris = <int?> value
-    #         # (<defs.BVHModel*> self.thisptr).num_tris = <int?> value
+    #         if self.thisptr:
+    #             self.thisptr.aabb_center[0] = value[0]
+    #             self.thisptr.aabb_center[1] = value[1]
+    #             self.thisptr.aabb_center[2] = value[2]
+    #         else:
+    #             raise ReferenceError
 
-    # def __str__(self):
-        # return <str?>self.thisptr
 
-# cdef class DynamicAABBTreeCollisionManager:
-#     cdef defs.DynamicAABBTreeCollisionManager *thisptr
-#     cdef vector[defs.PyObject*]*objs
+#-------------------------------------------------------------------------------
+# TODO
+#-------------------------------------------------------------------------------
+
+
+# cdef class ContinuousCollisionRequest:
+#     cdef defs.ContinuousCollisionRequest *thisptr
+#
 #     def __cinit__(self):
-#         self.thisptr = new defs.DynamicAABBTreeCollisionManager()
-#         self.objs = new vector[defs.PyObject *]()
+#         self.thisptr = new defs.ContinuousCollisionRequest()
+#
 
-
-# cdef class OBBRSS:
-#     cdef defs.OBBRSS *thisptr
-#     def __cinit__(self, n, d):
-#         self.thisptr = new defs.OBBRSS()
+# continuousCollide(o1, tf_goal_o1, o2, tf_goal_o2, request, result);

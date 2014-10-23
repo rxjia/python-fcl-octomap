@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from fcl import fcl
-
+from fcl import collision_data as cd
 
 class Test_BVHModel(TestCase):
     def setUp(self):
@@ -111,27 +111,22 @@ class Test_BVHModel(TestCase):
         from fcl import fcl
 
         self.box = fcl.Box(10,10,10)
-        self.bvh = fcl.BVHModel()
 
+        self.bvh = fcl.BVHModel()
         self.bvh.beginModel(1,1)
         self.bvh.addTriangle([-1,1,1], [11,11,1], [0,0,0])
         self.bvh.endModel()
 
         coll_bvh = fcl.CollisionObject(self.bvh)
-        # coll_box = fcl.CollisionObject(self.box)
-        # ret, result = fcl.collide(coll_box,
-        #                           coll_bvh,
-        #                           fcl.cd.CollisionRequest()
-        # )
-        # print coll_bvh
+        coll_box = fcl.CollisionObject(self.box)
 
-        # self.assertEqual(result.contacts, [])
-        # self.assertEqual(result.cost_sources, [])
-        #
-        # dis, result = fcl.distance(fcl.CollisionObject(self.box),
-        #                            fcl.CollisionObject(self.bvh),
-        #                            fcl.cd.DistanceRequest(True)
-        # )
+        ret, result = fcl.distance(coll_box, coll_bvh, cd.DistanceRequest(True))
+        # TODO this has probably failed? the -1
+        self.assertEqual(ret, -1)
+
+        ret, result = fcl.collide(coll_box, coll_bvh, cd.CollisionRequest())
+        self.assertEqual(ret, 1)
+        self.assertAlmostEqual(result.contacts[0].penetration_depth, -0.5634, places=3 )
 
 
 

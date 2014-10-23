@@ -272,7 +272,9 @@ cdef extern from "fcl/BVH/BV_fitter.h" namespace "fcl":
 cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
     # Cython only accepts type template parameters.
     # see https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs
-    cdef cppclass BVHModel "fcl::BVHModel<fcl::OBBRSS>" ( ShapeBase ):
+
+
+    cdef cppclass BVHModel "fcl::BVHModel<fcl::OBBRSS>" ( CollisionGeometry ):
         # Constructing an empty BVH
         BVHModel() except +
         BVHModel(BVHModel& other) except +
@@ -319,7 +321,7 @@ cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
 
         int buildTree()
 
-        void computeLocalAABB()
+        # void computeLocalAABB()
 
 
 

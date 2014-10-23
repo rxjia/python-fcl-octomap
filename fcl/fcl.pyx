@@ -115,8 +115,9 @@ cdef class CollisionGeometry:
     def __cinit__(self):
         pass
     def __dealloc__(self):
-        if self.thisptr:
-            del self.thisptr
+        pass
+    #     if self.thisptr:
+    #         del self.thisptr
     def getNodeType(self):
         if self.thisptr:
             return self.thisptr.getNodeType()
@@ -414,11 +415,11 @@ cdef c_to_python_collision_geometry(defs.const_CollisionGeometry*geom):
         return obj
 
     elif geom.getNodeType() == defs.BV_OBBRSS:
-        print "OMG OMG OMG"*100
-        print "OBBRSS"*1000
-        # obj = Plane(np.zeros(3), 0)
-        # memcpy(obj.thisptr, geom, sizeof(defs.Plane))
-        # return obj
+        print "OMG OMG OMG"
+        print "OBBRSS"
+        obj = BVHModel()
+        memcpy(obj.thisptr, geom, sizeof(defs.BVHModel))
+        return obj
 
 
 cdef copy_ptr_collision_object(defs.CollisionObject*cobj):
@@ -489,37 +490,36 @@ def distance(CollisionObject o1, CollisionObject o2, request):
 # https://groups.google.com/forum/#!searchin/cython-users/ctypedef$20template/cython-users/40JVog15WS4/LwJk-9jj4OIJ
 #-------------------------------------------------------------------------------
 
-cdef class BVHModel(ShapeBase):
-    cdef defs.BVHModel *this_pointer
+cdef class BVHModel(CollisionGeometry):
+#     cdef defs.BVHModel *thisptr
     def __cinit__(self):
-        self.this_pointer = new defs.BVHModel()
+        print 'constructing BVH!!!!'*100
+        self.thisptr = new defs.BVHModel()
 
     # def __dealloc__(self):
-    #     if self.this_pointer:
-    #         del self.this_pointer
+    #     if self.thisptr:
+    #         del self.thisptr
 
     def num_tries_(self):
-        return self.this_pointer.num_tris
+        return (<defs.BVHModel*> self.thisptr).num_tris
 
     def buildState(self):
-        return self.this_pointer.build_state
-
+        return (<defs.BVHModel*> self.thisptr).build_state
+    #
     def beginModel(self, num_tris_,num_vertices_):
-        n = self.this_pointer.beginModel(<int?>num_tris_ ,<int?>num_vertices_)
+        n = (<defs.BVHModel*> self.thisptr).beginModel(<int?>num_tris_ ,<int?>num_vertices_)
         return n
 
     def endModel(self):
-        n =  self.this_pointer.endModel()
+        n =  (<defs.BVHModel*> self.thisptr).endModel()
         return n
 
     def addVertex(self, x,y,z):
-        # uh, is dat geen pointer naar een vertex?
-        # self.this_pointer.addVertex( &<defs.Vec3f*>v )
-        self.this_pointer.addVertex( defs.Vec3f(<double?>x, <double?>y, <double?>z ) )
+        (<defs.BVHModel*> self.thisptr).addVertex( defs.Vec3f(<double?>x, <double?>y, <double?>z ) )
         return True
 
     def addTriangle(self, v1, v2, v3):
-        n =  self.this_pointer.addTriangle(
+        n =  (<defs.BVHModel*> self.thisptr).addTriangle(
             defs.Vec3f(<double?>v1[0], <double?>v1[1], <double?>v1[2], ),
             defs.Vec3f(<double?>v2[0], <double?>v2[1], <double?>v2[2], ),
             defs.Vec3f(<double?>v3[0], <double?>v3[1], <double?>v3[2], ),
@@ -545,6 +545,11 @@ cdef class BVHModel(ShapeBase):
         else:
             return False
 
+
+
+
+
+
     # def addSubModel(self, ps, ts):
     #     """
     #
@@ -553,32 +558,32 @@ cdef class BVHModel(ShapeBase):
     #     """
     #     # convert list ( or numpy arr ) to Vec3f and Triangles
     #     # const vector[Vec3f]& ps
-    #     n = self.this_pointer.addSubModel(ps, ts)
+    #     n = self.thisptr.addSubModel(ps, ts)
     #     return n
 
-    def getNodeType(self):
-        if self.this_pointer:
-            return self.this_pointer.getNodeType()
-        else:
-            return None
+    # def getNodeType(self):
+    #     if self.thisptr:
+    #         return self.thisptr.getNodeType()
+    #     else:
+    #         return None
 
     # def computeLocalAABB(self):
-    #     if self.this_pointer:
-    #         self.this_pointer.computeLocalAABB()
+    #     if self.thisptr:
+    #         self.thisptr.computeLocalAABB()
     #     else:
     #         return None
 
     # property aabb_center:
     #     def __get__(self):
-    #         if self.this_pointer:
-    #             return fcl.vec3f_to_tuple(self.this_pointer.aabb_center)
+    #         if self.thisptr:
+    #             return fcl.vec3f_to_tuple(self.thisptr.aabb_center)
     #         else:
     #             return None
     #     def __set__(self, value):
-    #         if self.this_pointer:
-    #             self.this_pointer.aabb_center[0] = value[0]
-    #             self.this_pointer.aabb_center[1] = value[1]
-    #             self.this_pointer.aabb_center[2] = value[2]
+    #         if self.thisptr:
+    #             self.thisptr.aabb_center[0] = value[0]
+    #             self.thisptr.aabb_center[1] = value[1]
+    #             self.thisptr.aabb_center[2] = value[2]
     #         else:
     #             raise ReferenceError
 

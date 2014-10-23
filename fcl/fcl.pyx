@@ -82,9 +82,11 @@ cdef class CollisionObject:
             if not self._no_instance:
                 raise ValueError
     def __dealloc__(self):
-        if self.thisptr and not self._no_instance:
-            free(self.thisptr)
-        defs.Py_DECREF(self.geom)
+        pass
+        # if self.thisptr and not self._no_instance:
+        #     free(self.thisptr)
+        # defs.Py_DECREF(self.geom)
+
     def getObjectType(self):
         return self.thisptr.getObjectType()
     def getNodeType(self):
@@ -411,6 +413,14 @@ cdef c_to_python_collision_geometry(defs.const_CollisionGeometry*geom):
         memcpy(obj.thisptr, geom, sizeof(defs.Plane))
         return obj
 
+    elif geom.getNodeType() == defs.BV_OBBRSS:
+        print "OMG OMG OMG"*100
+        print "OBBRSS"*1000
+        # obj = Plane(np.zeros(3), 0)
+        # memcpy(obj.thisptr, geom, sizeof(defs.Plane))
+        # return obj
+
+
 cdef copy_ptr_collision_object(defs.CollisionObject*cobj):
     co = CollisionObject(_no_instance=True)
     (<CollisionObject> co).thisptr = cobj
@@ -471,3 +481,118 @@ def distance(CollisionObject o1, CollisionObject o2, request):
     dis_res.b1 = result.b1
     dis_res.b2 = result.b2
     return dis, dis_res
+
+
+
+#-------------------------------------------------------------------------------
+# templates are handled pretty ugly...
+# https://groups.google.com/forum/#!searchin/cython-users/ctypedef$20template/cython-users/40JVog15WS4/LwJk-9jj4OIJ
+#-------------------------------------------------------------------------------
+
+cdef class BVHModel(ShapeBase):
+    cdef defs.BVHModel *this_pointer
+    def __cinit__(self):
+        self.this_pointer = new defs.BVHModel()
+
+    # def __dealloc__(self):
+    #     if self.this_pointer:
+    #         del self.this_pointer
+
+    def num_tries_(self):
+        return self.this_pointer.num_tris
+
+    def buildState(self):
+        return self.this_pointer.build_state
+
+    def beginModel(self, num_tris_,num_vertices_):
+        n = self.this_pointer.beginModel(<int?>num_tris_ ,<int?>num_vertices_)
+        return n
+
+    def endModel(self):
+        n =  self.this_pointer.endModel()
+        return n
+
+    def addVertex(self, x,y,z):
+        # uh, is dat geen pointer naar een vertex?
+        # self.this_pointer.addVertex( &<defs.Vec3f*>v )
+        self.this_pointer.addVertex( defs.Vec3f(<double?>x, <double?>y, <double?>z ) )
+        return True
+
+    def addTriangle(self, v1, v2, v3):
+        n =  self.this_pointer.addTriangle(
+            defs.Vec3f(<double?>v1[0], <double?>v1[1], <double?>v1[2], ),
+            defs.Vec3f(<double?>v2[0], <double?>v2[1], <double?>v2[2], ),
+            defs.Vec3f(<double?>v3[0], <double?>v3[1], <double?>v3[2], ),
+        )
+        if n == defs.BVH_OK:
+            return True
+        elif n == defs.BVH_ERR_MODEL_OUT_OF_MEMORY:
+            raise MemoryError("Cannot allocate memory for vertices and triangles")
+        elif n == defs.BVH_ERR_BUILD_OUT_OF_SEQUENCE:
+            raise ValueError("BVH construction does not follow correct sequence")
+        elif n == defs.BVH_ERR_BUILD_EMPTY_MODEL:
+            raise ValueError("BVH geometry is not prepared")
+        elif n == defs.BVH_ERR_BUILD_EMPTY_PREVIOUS_FRAME:
+            raise ValueError("BVH geometry in previous frame is not prepared")
+        elif n == defs.BVH_ERR_UNSUPPORTED_FUNCTION:
+            raise ValueError("BVH funtion is not supported")
+        elif n == defs.BVH_ERR_UNUPDATED_MODEL:
+            raise ValueError("BVH model update failed")
+        elif n == defs.BVH_ERR_INCORRECT_DATA:
+            raise ValueError("BVH data is not valid")
+        elif n == defs.BVH_ERR_UNKNOWN:
+            raise ValueError("known failure")
+        else:
+            return False
+
+    # def addSubModel(self, ps, ts):
+    #     """
+    #
+    #     :param ps: list of points
+    #     :param ts: list of triangles
+    #     """
+    #     # convert list ( or numpy arr ) to Vec3f and Triangles
+    #     # const vector[Vec3f]& ps
+    #     n = self.this_pointer.addSubModel(ps, ts)
+    #     return n
+
+    def getNodeType(self):
+        if self.this_pointer:
+            return self.this_pointer.getNodeType()
+        else:
+            return None
+
+    # def computeLocalAABB(self):
+    #     if self.this_pointer:
+    #         self.this_pointer.computeLocalAABB()
+    #     else:
+    #         return None
+
+    # property aabb_center:
+    #     def __get__(self):
+    #         if self.this_pointer:
+    #             return fcl.vec3f_to_tuple(self.this_pointer.aabb_center)
+    #         else:
+    #             return None
+    #     def __set__(self, value):
+    #         if self.this_pointer:
+    #             self.this_pointer.aabb_center[0] = value[0]
+    #             self.this_pointer.aabb_center[1] = value[1]
+    #             self.this_pointer.aabb_center[2] = value[2]
+    #         else:
+    #             raise ReferenceError
+
+
+#-------------------------------------------------------------------------------
+# TODO
+#-------------------------------------------------------------------------------
+
+
+# cdef class ContinuousCollisionRequest:
+#     cdef defs.ContinuousCollisionRequest *thisptr
+#
+#     def __cinit__(self):
+#         self.thisptr = new defs.ContinuousCollisionRequest()
+#
+
+# continuousCollide(o1, tf_goal_o1, o2, tf_goal_o2, request, result);

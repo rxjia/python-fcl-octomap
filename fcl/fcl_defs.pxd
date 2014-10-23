@@ -236,6 +236,19 @@ cdef extern from "fcl/BVH/BVH_internal.h" namespace "fcl":
         BVH_MODEL_POINTCLOUD # point cloud model
 
 cdef extern from "fcl/BVH/BVH_internal.h" namespace "fcl":
+    cdef enum  BVHReturnCode:
+        BVH_OK = 0,                              # BVH is valid
+        BVH_ERR_MODEL_OUT_OF_MEMORY = -1,        # Cannot allocate memory for vertices and triangles
+        BVH_ERR_BUILD_OUT_OF_SEQUENCE = -2,      # BVH construction does not follow correct sequence
+        BVH_ERR_BUILD_EMPTY_MODEL = -3,          # BVH geometry is not prepared
+        BVH_ERR_BUILD_EMPTY_PREVIOUS_FRAME = -4, # BVH geometry in previous frame is not prepared
+        BVH_ERR_UNSUPPORTED_FUNCTION = -5,       # BVH funtion is not supported
+        BVH_ERR_UNUPDATED_MODEL = -6,            # BVH model update failed
+        BVH_ERR_INCORRECT_DATA = -7,             # BVH data is not valid
+        BVH_ERR_UNKNOWN = -8                     # Unknown failure
+
+
+cdef extern from "fcl/BVH/BVH_internal.h" namespace "fcl":
     cdef enum BVHBuildState:
         BVH_BUILD_STATE_EMPTY,         # empty state, immediately after constructor
         BVH_BUILD_STATE_BEGUN,         # after beginModel(), state for adding geometry primitives
@@ -256,34 +269,10 @@ cdef extern from "fcl/BVH/BV_fitter.h" namespace "fcl":
     cdef cppclass BVFitterBase:
         pass
 
-# cdef extern from "fcl/BV/RSS.h" namespace "fcl":
-#     cdef cppclass RSS:
-#         Vec3f axis #[3]
-#         Vec3f Tr
-#         FCL_REAL l #[2]
-#         FCL_REAL r
-#
-# cdef extern from "fcl/BV/OBB.h" namespace "fcl":
-#     cdef cppclass OBB:
-#         Vec3f axis #[3]
-#         Vec3f To
-#         Vec3f extent
-
-# cdef extern from "fcl/BV/OBBRSS.h" namespace "fcl":
-#     cdef cppclass OBBRSS:
-#         pass
-#
-# cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
-#     ctypedef OBBRSS myOBBRSS "fcl::OBBRSS"
-#     cdef
-
-# cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
-
-
 cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
     # Cython only accepts type template parameters.
     # see https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs
-    cdef cppclass BVHModel "fcl::BVHModel<fcl::OBBRSS>" ( CollisionGeometry ):
+    cdef cppclass BVHModel "fcl::BVHModel<fcl::OBBRSS>" ( ShapeBase ):
         # Constructing an empty BVH
         BVHModel() except +
         BVHModel(BVHModel& other) except +
@@ -313,6 +302,29 @@ cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
         # boost::shared_ptr<BVFitterBase<BV> > bv_fitter
         shared_ptr[BVFitterBase] bv_fitter
 
+        int beginModel(int num_tris_, int num_vertices_)
+
         Vec3f addVertex(const Vec3f& p)
+
+        int addTriangle(const Vec3f& p1, const Vec3f& p2, const Vec3f& p3)
+
+        # int addSubModel(const std::vector<Vec3f>& ps)
+        # void getCostSources(vector[CostSource]& cost_sources_)
+
+        # int addSubModel(const vector[Vec3f]& ps)
+        #
+        # int addSubModel(const vector[Vec3f]& ps, const vector[Triangle]& ts)
+
+        int endModel()
+
+        int buildTree()
+
+        void computeLocalAABB()
+
+
+
+
+
+
 
 

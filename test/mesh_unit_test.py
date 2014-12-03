@@ -1,10 +1,9 @@
 from unittest import TestCase
-
-from fcl import fcl
-from fcl import collision_data as cd
+import collections
 
 class Test_BVHModel(TestCase):
     def setUp(self):
+        from fcl import fcl
         print "create new bvh model"
         self.mesh = fcl.BVHModel()
 
@@ -13,42 +12,31 @@ class Test_BVHModel(TestCase):
         self.box = BRepPrimAPI_MakeBox(10, 20, 30).Shape()
 
     def test_get_mesh_data_from_occ_brep(self, occ_brep=None):
+        from OCC.BRep import BRep_Tool_Triangulation
+        from OCC.TopAbs import TopAbs_FACE
+        from OCC.TopExp import TopExp_Explorer
+        from OCC.TopLoc import TopLoc_Location
+        from OCC.BRepMesh import BRepMesh_IncrementalMesh
+        from OCC.TopoDS import TopoDS_face
+
+        self.create_occ_box()
+        inc_mesh = BRepMesh_IncrementalMesh(self.box, 0.8)
+        assert inc_mesh.IsDone()
+
+        ex = TopExp_Explorer(self.box, TopAbs_FACE)
+        triangles = collections.deque()
+        while ex.More():
+            F = TopoDS_face(ex.Current())
+            L = TopLoc_Location()
+            facing = (BRep_Tool_Triangulation(F, L)).GetObject()
+            tri = facing.Triangles()
+            nodes = facing.Nodes()
+            for i in range(1, facing.NbTriangles() + 1):
+                trian = tri.Value(i)
+                index1, index2, index3 = trian.Get()
+                triangles.append( ( nodes.Value(index1), nodes.Value(index1), nodes.Value(index1) ) )
+            ex.Next()
         pass
-
-        # # todo: create a numpy property of the vertex, normal and tri's index arrays...
-        # from OCC.Visualization import Tesselator, atNormal
-        # tess = Tesselator(occ_brep, atNormal, 1.0, 1, 0.01, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.)
-        #
-        # self.n_tris = tess.ObjGetTriangleCount()
-        # self.n_normals = tess.ObjGetNormalCount()
-        # self.vertices = tess.VerticesList()
-
-        # if not hasattr(self, "box"):
-        #     self.create_occ_box()
-        #
-        # from OCC.BRep import BRep_Tool_Triangulation
-        # from OCC.TopAbs import TopAbs_FACE
-        # from OCC.TopExp import TopExp_Explorer
-        # from OCC.TopLoc import TopLoc_Location
-        # from OCC.BRepMesh import brepmesh, BRepMesh_ReMesh, BRepMesh_IncrementalMesh
-        # from OCC.TopoDS import topods_Face
-        #
-        # # brepmesh.Mesh(self.box, 0.8)
-        # # BRepMesh_ReMesh(self.box, 0.8)
-        # inc_mesh = BRepMesh_IncrementalMesh(self.box, 0.8)
-        # assert inc_mesh.IsDone()
-        #
-        #
-        # ex = TopExp_Explorer(self.box, TopAbs_FACE)
-        # while ex.More():
-        #     F = topods_Face(ex.Current())
-        #     L = TopLoc_Location()
-        #     facing = (BRep_Tool_Triangulation(F, L)).GetObject()
-        #     tri = facing.Triangles()
-        #     for i in range(1, facing.NbTriangles() + 1):
-        #         trian = tri.Value(i)
-        #         index1, index2, index3 = trian.Get()
-        #     ex.Next()
 
     #
     def test_getNodeType(self):
@@ -89,8 +77,7 @@ class Test_BVHModel(TestCase):
         self.assertEqual(self.mesh.num_tries_(), 1)
         # note no self.mesh.beginModel call
         # ValueError: BVH construction does not follow correct sequence
-        with self.assertRaises(ValueError):
-            self.mesh.addTriangle([0,0,0],[1,1,1],[2,2,2])
+        self.assertRaises(ValueError, self.mesh.addTriangle, [0,0,0],[1,1,1],[2,2,2])
         self.mesh.endModel()
 
     def test_addVertex(self):
@@ -109,6 +96,7 @@ class Test_BVHModel(TestCase):
 
     def test_collide_Triangle_Box(self):
         from fcl import fcl
+        from fcl import collision_data as cd
 
         self.box = fcl.Box(10,10,10)
 
@@ -128,6 +116,35 @@ class Test_BVHModel(TestCase):
         self.assertEqual(ret, 1)
         self.assertAlmostEqual(result.contacts[0].penetration_depth, -0.5634, places=3 )
 
+    def test_continuous_collide(self):
+        from fcl import fcl
+        from fcl import collision_data as cd
+        from fcl import transform as tf
 
+        box = fcl.Box(1,1,1)
+        sph = fcl.Cylinder(1,1)
 
+        coll_box_A = fcl.CollisionObject(box)
+
+        no_trans = tf.Transform()
+
+        trans_A = tf.Transform(pos=(-10,0,0))
+        coll_box_B = fcl.CollisionObject(box, trans_A)
+
+        trans_B = tf.Transform(tf.Quaternion(), [10,0,0])
+        coll_sph = fcl.CollisionObject(sph)
+        coll_box_B.setTranslation(trans_B.t)
+
+        request = cd.ContinuousCollisionRequest()
+        request.num_max_iterations = 100
+        request.ccd_solver_type = 1 # CCDC_CONSERVATIVE_ADVANCEMENT
+        request.gjk_solver_type = 1
+
+        ret, result = fcl.continuousCollide(coll_box_A, no_trans, coll_sph, trans_B, request)
+        # self.assertTrue(result.is_collide is False)
+
+        ret, result = fcl.continuousCollide(coll_box_A, no_trans, coll_box_B, trans_A, request)
+        self.assertTrue(result.is_collide is True)
+
+        ret, result = fcl.continuousCollide(coll_box_A, no_trans, coll_box_B, trans_A, request)
 

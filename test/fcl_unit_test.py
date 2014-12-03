@@ -128,5 +128,91 @@ class Test_FCL(TestCase):
         # Warning: collision function between node type 9 and node type 17 is not supported
         self.assertTrue(ret==0)
 
+    def test_broadphase(self):
+        objs = [fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0)),
+                fcl.CollisionObject(fcl.Sphere(4.0)),
+                fcl.CollisionObject(fcl.Cone(5.0, 6.0))]
 
+        cyl = fcl.CollisionObject(fcl.Cylinder(7.0, 8.0))
+
+        # Register objects to DynamicAABBTreeCollisionManager
+        manager = fcl.DynamicAABBTreeCollisionManager()
+        self.assertEqual(manager.size(), 0)
+        manager.registerObjects(objs)
+        self.assertEqual(manager.size(), 3)
+        manager.registerObject(cyl)
+        self.assertEqual(manager.size(), 4)
+
+        # Use Callback function
+        def cb_func(obj1, obj2, res):
+            print "collide_callback_func start"
+            ret, res = fcl.collide(obj1, obj2, fcl.CollisionRequest())
+            print "result: ", ret
+            return ret
+
+        manager.setup()
+
+        res = fcl.CollisionResult()
+        manager.collide(res, cb_func)
+        manager.collide(objs[0], objs[1], cb_func)
+        print "res?", res.contacts
+
+        # Initialize the collision manager for the first group of objects. 
+        # FCL provides various different implementations of CollisionManager.
+        # Generally, the DynamicAABBTreeCollisionManager would provide the best performance.
+        manager1 = fcl.DynamicAABBTreeCollisionManager()
+        # Initialize the collision manager for the second group of objects.
+        manager2 = fcl.DynamicAABBTreeCollisionManager()
+        # To add objects into the collision manager, using BroadPhaseCollisionManager::registerObject() function to add one object
+        # std::vector<CollisionObject*> objects1 = ...
+        # for(std::size_t i = 0; i < objects1.size(); ++i)
+        # manager1->registerObject(objects1[i]);
+
+        manager1.registerObjects(objs)
+
+
+
+        # Another choose is to use  BroadPhaseCollisionManager::registerObjects() function to add a set of objects
+        # std::vector<CollisionObject*> objects2 = ...
+        # manager2->registerObjects(objects2);
+
+        manager2.registerObject(cyl)
+
+        # In order to collect the information during broadphase, CollisionManager requires two settings: 
+        # a) a callback to collision or distance; 
+        # b) an intermediate data to store the information generated during the broadphase computation
+        # For a), FCL provides the default callbacks for both collision and distance.
+        # For b), FCL uses the CollisionData structure for collision and DistanceData structure for distance. CollisionData/DistanceData is just a container including both the CollisionRequest/DistanceRequest and CollisionResult/DistanceResult structures mentioned above.
+        # CollisionData collision_data;
+        # DistanceData distance_data;
+        # Setup the managers, which is related with initializing the broadphase acceleration structure according to objects input
+        # manager1->setup();
+        # manager2->setup();
+
+        manager1.setup()
+        manager2.setup()
+
+        # Examples for various queries
+        # 1. Collision query between two object groups and get collision numbers
+        # manager2->collide(manager1, &collision_data, defaultCollisionFunction);
+        from fcl import  collision_data as cd
+        res = cd.CollisionResult()
+        # manager2.collide(manager1, res, cb_func)
+
+        # manager2.collide(manager1, res)
+
+        print "xxx"
+        manager2.collide(res, cb_func)
+        # int n_contact_num = collision_data.result.numContacts();
+        # 2. Distance query between two object groups and get the minimum distance
+        # manager2->distance(manager1, &distance_data, defaultDistanceFunction);
+        # double min_distance = distance_data.result.min_distance;
+        # 3. Self collision query for group 1
+        # manager1->collide(&collision_data, defaultCollisionFunction);
+        # 4. Self distance query for group 1
+        # manager1->distance(&distance_data, defaultDistanceFunction);
+        # 5. Collision query between one object in group 1 and the entire group 2
+        # manager2->collide(objects1[0], &collision_data, defaultCollisionFunction);
+        # 6. Distance query between one object in group 1 and the entire group 2
+        # manager2->distance(objects1[0], &distance_data, defaultDistanceFunction); 
 

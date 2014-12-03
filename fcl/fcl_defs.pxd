@@ -51,6 +51,16 @@ cdef extern from "fcl/math/transform.h" namespace "fcl":
         Transform3f(Quaternion3f& q_, Vec3f& T_)
 
 cdef extern from "fcl/collision_data.h" namespace "fcl":
+
+    cdef enum CCDMotionType:
+        CCDM_TRANS, CCDM_LINEAR, CCDM_SCREW, CCDM_SPLINE
+
+    cdef enum CCDSolverType:
+        CCDC_NAIVE, CCDC_CONSERVATIVE_ADVANCEMENT, CCDC_RAY_SHOOTING, CCDC_POLYNOMIAL_SOLVER
+
+    cdef enum GJKSolverType:
+        GST_LIBCCD, GST_INDEP
+
     cdef cppclass Contact:
         CollisionGeometry *o1
         CollisionGeometry *o2
@@ -63,15 +73,24 @@ cdef extern from "fcl/collision_data.h" namespace "fcl":
         Contact(CollisionGeometry* o1_,
                 CollisionGeometry* o2_,
                 int b1_, int b2_) except +
+
     cdef cppclass CostSource:
         Vec3f aabb_min
         Vec3f aabb_max
         FCL_REAL cost_density
         FCL_REAL total_cost
+
     cdef cppclass CollisionResult:
         CollisionResult() except +
         void getContacts(vector[Contact]& contacts_)
         void getCostSources(vector[CostSource]& cost_sources_)
+
+    cdef cppclass ContinuousCollisionResult:
+        ContinuousCollisionResult() except +
+        bool is_collide
+        FCL_REAL time_of_contact
+        Transform3f contact_tf1, contact_tf2
+
     cdef cppclass CollisionRequest:
         size_t num_max_contacts
         bool enable_contact
@@ -83,6 +102,21 @@ cdef extern from "fcl/collision_data.h" namespace "fcl":
                          size_t num_max_cost_sources_,
                          bool enable_cost_,
                          bool use_approximate_cost_)
+
+    cdef cppclass ContinuousCollisionRequest:
+         size_t num_max_iterations_,
+         FCL_REAL toc_err_,
+         CCDMotionType ccd_motion_type_,
+         GJKSolverType gjk_solver_type_,
+         GJKSolverType ccd_solver_type_
+
+         ContinuousCollisionRequest(
+                             size_t num_max_iterations_,
+                             FCL_REAL toc_err_,
+                             CCDMotionType ccd_motion_type_,
+                             GJKSolverType gjk_solver_type_,
+                             CCDSolverType ccd_solver_type_ )
+
     cdef cppclass DistanceResult:
         FCL_REAL min_distance
         Vec3f* nearest_points
@@ -92,6 +126,7 @@ cdef extern from "fcl/collision_data.h" namespace "fcl":
         int b2
         DistanceResult(FCL_REAL min_distance_) except +
         DistanceResult() except +
+
     cdef cppclass DistanceRequest:
         bool enable_nearest_points
         DistanceRequest(bool enable_nearest_points_) except +
@@ -149,6 +184,7 @@ cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
 
     cdef cppclass Sphere(ShapeBase):
         Sphere(FCL_REAL radius_) except +
+        FCL_REAL radius
         FCL_REAL radius
 
     cdef cppclass Capsule(ShapeBase):
@@ -217,10 +253,23 @@ cdef extern from "fcl/collision.h" namespace "fcl":
     size_t collide(CollisionObject* o1, CollisionObject* o2,
                    CollisionRequest& request,
                    CollisionResult& result)
+
     size_t collide(CollisionGeometry* o1, Transform3f& tf1,
                    CollisionGeometry* o2, Transform3f& tf2,
                    CollisionRequest& request,
                    CollisionResult& result)
+
+cdef extern from "fcl/continuous_collision.h" namespace "fcl":
+    FCL_REAL continuousCollide(CollisionGeometry* o1, Transform3f& tf1_beg, Transform3f& tf1_end,
+                               CollisionGeometry* o2, Transform3f& tf2_beg, Transform3f& tf2_end,
+                               ContinuousCollisionRequest& request,
+                               ContinuousCollisionResult& result)
+
+    FCL_REAL continuousCollide(CollisionObject* o1, Transform3f& tf1_end,
+                               CollisionObject* o2, Transform3f& tf2_end,
+                               ContinuousCollisionRequest& request,
+                               ContinuousCollisionResult& result)
+
 
 cdef extern from "fcl/distance.h" namespace "fcl":
     FCL_REAL distance(CollisionObject* o1, CollisionObject* o2,
@@ -272,8 +321,6 @@ cdef extern from "fcl/BVH/BV_fitter.h" namespace "fcl":
 cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
     # Cython only accepts type template parameters.
     # see https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs
-
-
     cdef cppclass BVHModel "fcl::BVHModel<fcl::OBBRSS>" ( CollisionGeometry ):
         # Constructing an empty BVH
         BVHModel() except +

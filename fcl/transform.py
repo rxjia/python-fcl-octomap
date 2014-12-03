@@ -153,12 +153,12 @@ class Quaternion(object):
             data[1:] *= (-1)
         return Quaternion(data)
 
-    def transform(vec):
+    def transform(self, vec):
         r = self * Quaternion(0.0, vec[0], vec[1], vec[2]) * self.conj()
         return r.v
 
 
-class Transform:
+class Transform(object):
     def __init__(self, rot=None, pos=None):
         if not pos is None:
             self.t = np.array(pos)

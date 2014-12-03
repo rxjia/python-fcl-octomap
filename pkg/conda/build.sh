@@ -1,7 +1,8 @@
 #!/bin/bash
 export PREFIX=~/miniconda/
-export NUMPY_INC=/Users/jelleferinga/miniconda/pkgs/numpy-1.8.2-py27_0/lib/python2.7/site-packages/numpy/core/include
-export FCL_PY_DIR=/Users/jelleferinga/miniconda/lib/python2.7/site-packages/fcl
+export NUMPY_INC=/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/site-packages/numpy/core/include
+export FCL_PY_DIR=/Library/Python/2.6/site-packages
+#export PY_FCL_DIR
 
 export HERE=`pwd`
 
@@ -19,8 +20,8 @@ python setup.py install
 echo "done compiling "
 
 echo "run install name"
-install_name_tool -change libfcl.dylib @loader_path/../../../libfcl.dylib $FCL_PY_DIR/fcl.so
-install_name_tool -change libfcl.dylib @loader_path/../../../libfcl.dylib $FCL_PY_DIR/mesh.so
+#install_name_tool -change libfcl.dylib @loader_path/../../../libfcl.dylib $FCL_PY_DIR/fcl.so
+#install_name_tool -change libfcl.dylib @loader_path/../../../libfcl.dylib $FCL_PY_DIR/mesh.so
 
 # mehhh, keeps on failing on the already compiled files... strange...
 rm $FCL_PY_DIR/*.pyc

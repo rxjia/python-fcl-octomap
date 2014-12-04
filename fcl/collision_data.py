@@ -1,7 +1,5 @@
 import sys
 
-from .transform import Transform
-
 class OBJECT_TYPE:
     OT_UNKNOWN, OT_BVH, OT_GEOM, OT_OCTREE, OT_COUNT = range(5)
 
@@ -47,8 +45,6 @@ class ContinuousCollisionResult:
     def __init__(self, is_collide=False, time_of_contact=1.0):
         self.is_collide = is_collide
         self.time_of_contact = time_of_contact
-        # self.contact_tf1 = Transform()
-        # self.contact_tf2 = Transform()
 
 class CollisionRequest:
     def __init__(self,
@@ -70,7 +66,7 @@ class ContinuousCollisionRequest:
                  toc_err=0.0001,
                  ccd_motion_type=CCDMotionType.CCDM_TRANS,
                  gjk_solver_type=GJKSolverType.GST_LIBCCD,
-                 ccd_solver_type=CCDSolverType.CCDC_NAIVE):
+                 ccd_solver_type=CCDSolverType.CCDC_CONSERVATIVE_ADVANCEMENT):
         self.num_max_iterations = num_max_iterations
         self.toc_err = toc_err
         self.ccd_motion_type = ccd_motion_type

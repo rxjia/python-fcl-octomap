@@ -10,38 +10,44 @@ class Test_BVHModel(TestCase):
         self.mesh = fcl.BVHModel()
 
     def create_occ_box(self):
-        from OCC.BRepPrimAPI import BRepPrimAPI_MakeBox
-
-        self.box = BRepPrimAPI_MakeBox(10, 20, 30).Shape()
+        try:
+            from OCC.BRepPrimAPI import BRepPrimAPI_MakeBox
+            self.box = BRepPrimAPI_MakeBox(10, 20, 30).Shape()
+        except ImportError:
+            print "pythonocc not installed"
 
     def test_get_mesh_data_from_occ_brep(self, occ_brep=None):
-        from OCC.BRep import BRep_Tool_Triangulation
-        from OCC.TopAbs import TopAbs_FACE
-        from OCC.TopExp import TopExp_Explorer
-        from OCC.TopLoc import TopLoc_Location
-        from OCC.BRepMesh import BRepMesh_IncrementalMesh
-        from OCC.TopoDS import TopoDS_face
+        try:
+            from OCC.BRep import BRep_Tool_Triangulation
+            from OCC.TopAbs import TopAbs_FACE
+            from OCC.TopExp import TopExp_Explorer
+            from OCC.TopLoc import TopLoc_Location
+            from OCC.BRepMesh import BRepMesh_IncrementalMesh
+            from OCC.TopoDS import TopoDS_face
 
-        self.create_occ_box()
-        inc_mesh = BRepMesh_IncrementalMesh(self.box, 0.8)
-        assert inc_mesh.IsDone()
+        except ImportError:
+            print "looks like pythonocc is not installed"
 
-        ex = TopExp_Explorer(self.box, TopAbs_FACE)
-        triangles = collections.deque()
-        while ex.More():
-            F = TopoDS_face(ex.Current())
-            L = TopLoc_Location()
-            facing = (BRep_Tool_Triangulation(F, L)).GetObject()
-            tri = facing.Triangles()
-            nodes = facing.Nodes()
-            for i in range(1, facing.NbTriangles() + 1):
-                trian = tri.Value(i)
-                index1, index2, index3 = trian.Get()
-                triangles.append(( nodes.Value(index1), nodes.Value(index1), nodes.Value(index1) ))
-            ex.Next()
-        pass
+        else:
+            self.create_occ_box()
+            inc_mesh = BRepMesh_IncrementalMesh(self.box, 0.8)
+            assert inc_mesh.IsDone()
 
-    #
+            ex = TopExp_Explorer(self.box, TopAbs_FACE)
+            triangles = collections.deque()
+            while ex.More():
+                F = TopoDS_face(ex.Current())
+                L = TopLoc_Location()
+                facing = (BRep_Tool_Triangulation(F, L)).GetObject()
+                tri = facing.Triangles()
+                nodes = facing.Nodes()
+                for i in range(1, facing.NbTriangles() + 1):
+                    trian = tri.Value(i)
+                    index1, index2, index3 = trian.Get()
+                    triangles.append(( nodes.Value(index1), nodes.Value(index1), nodes.Value(index1) ))
+                ex.Next()
+
+
     def test_getNodeType(self):
         # BV_OBBRSS -> 5
         node_type = self.mesh.getNodeType()

@@ -145,9 +145,9 @@ class Test_FCL(TestCase):
 
         # Use Callback function
         def cb_func(obj1, obj2, res):
-            print "collide_callback_func start"
+            print("collide_callback_func start")
             ret, res = fcl.collide(obj1, obj2, fcl.CollisionRequest())
-            print "result: ", ret
+            print("result: ", ret)
             return ret
 
         manager.setup()
@@ -155,7 +155,7 @@ class Test_FCL(TestCase):
         res = fcl.CollisionResult()
         manager.collide(res, cb_func)
         manager.collide(objs[0], objs[1], cb_func)
-        print "res?", res.contacts
+        print("res?", res.contacts)
 
         # Initialize the collision manager for the first group of objects. 
         # FCL provides various different implementations of CollisionManager.
@@ -201,7 +201,7 @@ class Test_FCL(TestCase):
 
         # manager2.collide(manager1, res)
 
-        print "xxx"
+        print("xxx")
         manager2.collide(res, cb_func)
         # int n_contact_num = collision_data.result.numContacts();
         # 2. Distance query between two object groups and get the minimum distance

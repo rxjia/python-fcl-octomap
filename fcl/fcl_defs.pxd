@@ -2,6 +2,7 @@ from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.set cimport set
+from libcpp.memory cimport shared_ptr
 
 cdef extern from "Python.h":
        ctypedef struct PyObject
@@ -10,11 +11,11 @@ cdef extern from "Python.h":
        object PyObject_CallObject(object obj, object args)
        object PySequence_Concat(object obj1, object obj2)
 
-cdef extern from "boost/shared_ptr.hpp" namespace "boost":
-    cppclass shared_ptr[T]:
-        shared_ptr() except +
-        shared_ptr(T*) except +
-        T* get()
+#cdef extern from "boost/shared_ptr.hpp" namespace "boost":
+#    cppclass shared_ptr[T]:
+#        shared_ptr() except +
+#        shared_ptr(T*) except +
+#        T* get()
 
 cdef extern from "fcl/data_types.h" namespace "fcl":
     ctypedef double FCL_REAL

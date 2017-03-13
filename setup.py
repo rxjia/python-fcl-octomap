@@ -41,6 +41,8 @@ setup(
                 "fcl"
                 ],
         language="c++",
-        extra_compile_args = ["-std=c++11", "-Xclang", "-fcolor-diagnostics"])],
+        #for clang, add: , "-Xclang", "-fcolor-diagnostics"
+        extra_compile_args = ["-std=c++11"]
+    )],
     cmdclass={'build_ext': build_ext},
     )

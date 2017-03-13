@@ -167,7 +167,7 @@ class Transform(object):
 
         if rot is None:
             self.q = Quaternion()
-        elif isinstance(rot ,Quaternion):
+        elif isinstance(rot, Quaternion):
             self.q = rot
         else:
             self.q = rotation_to_quaternion(rot)

@@ -1,4 +1,4 @@
-from fcl import fcl, transform
+from fcl import fcl, transform, collision_data
 
 objs = [fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0)),
         fcl.CollisionObject(fcl.Sphere(4.0)),
@@ -6,61 +6,40 @@ objs = [fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0)),
 
 # Register objects to DynamicAABBTreeCollisionManager
 manager = fcl.DynamicAABBTreeCollisionManager()
-print "Before resgister: ", manager.size()
+print("Before register: ", manager.size())
 manager.registerObjects(objs)
-print "After register 1 : ", manager.size()
+print("After register 1 : ", manager.size())
 manager.registerObject(fcl.CollisionObject(fcl.Cylinder(7.0, 8.0)))
-print "After register 2 : ", manager.size()
+print("After register 2 : ", manager.size())
 
 # Use Callback function
 def cb_func(obj1, obj2, res):
-    print "cb_func start"
-    ret, res = fcl.collide(obj1, obj2, fcl.CollisionRequest())
-    print "result: ", ret
+    print("cb_func start")
+    ret, res = fcl.collide(obj1, obj2, collision_data.CollisionRequest())
+    print("result: ", ret)
     return ret
-res = fcl.CollisionResult()
+res = collision_data.CollisionResult()
 manager.collide(res, cb_func)
 
-# Collision calcuration
+# Collision calculation
 ret, result = fcl.collide(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
                                               transform.Transform(transform.Quaternion(), [10.0, 0.0, 0.0])),
                           fcl.CollisionObject(fcl.Sphere(4.0),
                                               transform.Transform(transform.Quaternion(), [-10.0, 0.0, 0.0])),
-                          fcl.CollisionRequest())
+                          collision_data.CollisionRequest())
 
-print "-- Collision result: ", ret
+print("-- Collision result: ", ret)
 for contact in result.contacts:
-    print contact.o1
-    print contact.o2
+    print(contact.o1)
+    print(contact.o2)
 for cost_source in result.cost_sources:
-    print cost_source
+    print(cost_source)
 
 dis, result = fcl.distance(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
                                                transform.Transform(transform.Quaternion(), [10.0, 0.0, 0.0])),
                            fcl.CollisionObject(fcl.Sphere(4.0),
                                                transform.Transform(transform.Quaternion(), [-10.0, 0.0, 0.0])),
-                           fcl.DistanceRequest(True))
+                           collision_data.DistanceRequest(True))
 
-print "-- Distance result: ", dis
-print result.nearest_points
-
-ret, result = fcl.collide(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
-                                              transform.Transform(transform.Quaternion())),
-                          fcl.CollisionObject(fcl.Sphere(4.0),
-                                              transform.Transform(transform.Quaternion(), [0.0, 0.0, 0.0])),
-                          fcl.CollisionRequest())
-print "-- Collision result: ", ret
-for contact in result.contacts:
-    print contact.o1
-    print contact.o2
-for cost_source in result.cost_sources:
-    print cost_source
-
-dis, result = fcl.distance(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
-                                               transform.Transform(transform.Quaternion())),
-                           fcl.CollisionObject(fcl.Sphere(4.0),
-                                               transform.Transform(transform.Quaternion(), [0.0, 0.0, 0.0])),
-                           fcl.DistanceRequest(True))
-
-print "-- Distance result: ", dis
-print result.nearest_points
+print("-- Distance result: ", dis)
+print(result.nearest_points)

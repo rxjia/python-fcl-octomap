@@ -40,6 +40,9 @@ setup(
         libraries=[
                 "fcl"
                 ],
-        language="c++")],
+        language="c++",
+        #for clang, add: , "-Xclang", "-fcolor-diagnostics"
+        extra_compile_args = ["-std=c++11"]
+    )],
     cmdclass={'build_ext': build_ext},
     )

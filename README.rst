@@ -3,19 +3,19 @@ python-fcl
 
 About
 -----
-This library is a Python binding of FCL library.
+This library is a Python binding for the FCL library (0.5.0 atm).
 
 Build
 -----
-Building **python-fcl requires FCL headers and libraries**.
-When building, you can specify their location with the --include-dirs
-and --library-dirs command line options:
+Building python-fcl requires **FCL headers and libraries** and a recent version of **Cython**.
+After installing both, you can specify their location with the --include-dirs
+and --library-dirs command line options if they are not found automatically:
 
     $ python setup.py build_ext --include-dirs /path/to/includes --library-dirs /path/to/libraries
 
-If you use ubuntu 12.04 and install ros-fcl at /opt directory, you can use the following command:
+If you use ubuntu (>= 16.10) and install libfcl-dev, you can simply use the following command:
 
-    $ python setup.py
+    $ python setup.py build_ext 
 
 Install
 -------

@@ -6,7 +6,7 @@ class Test_BVHModel(TestCase):
     def setUp(self):
         from fcl import fcl
 
-        print "create new bvh model"
+        print("create new bvh model")
         self.mesh = fcl.BVHModel()
 
     def create_occ_box(self):
@@ -14,7 +14,7 @@ class Test_BVHModel(TestCase):
             from OCC.BRepPrimAPI import BRepPrimAPI_MakeBox
             self.box = BRepPrimAPI_MakeBox(10, 20, 30).Shape()
         except ImportError:
-            print "pythonocc not installed"
+            print("pythonocc not installed")
 
     def test_get_mesh_data_from_occ_brep(self, occ_brep=None):
         try:
@@ -26,7 +26,7 @@ class Test_BVHModel(TestCase):
             from OCC.TopoDS import TopoDS_face
 
         except ImportError:
-            print "looks like pythonocc is not installed"
+            print("looks like pythonocc is not installed")
 
         else:
             self.create_occ_box()
@@ -55,7 +55,7 @@ class Test_BVHModel(TestCase):
 
 
     def test_addTriangle(self):
-        print 'add triangle'
+        print('add triangle')
         self.mesh.beginModel(1, 1)
         self.assertEqual(self.mesh.addTriangle([0, 0, 0], [1, 1, 1], [2, 2, 2]), True)
         self.mesh.endModel()
@@ -66,14 +66,14 @@ class Test_BVHModel(TestCase):
         self.mesh.endModel()
 
     def test_addVertex(self):
-        print 'add vertex'
+        print('add vertex')
         model = self.mesh.beginModel(1, 1)
         self.assertEqual(model, 0, msg="add vertex, begin model")
         v = self.mesh.addVertex(100, 0, 10)
         self.assertTrue(v, "expected True")
         # self.assertRaises(ValueError, self.mesh.endModel())
         vv = self.mesh.endModel()
-        print "vv:", vv
+        print("vv:", vv)
         # self.assertEqual(model, 0, "add vertex, end model, expected 0 got {0}".format(model))
 
     def test_del(self):

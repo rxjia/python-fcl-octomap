@@ -1,6 +1,6 @@
 import os
 import sys
-from distutils.core import Extension, setup
+from setuptools import Extension, setup
 from Cython.Distutils import build_ext
 
 platform_supported = False

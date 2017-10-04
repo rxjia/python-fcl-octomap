@@ -50,6 +50,8 @@ cdef extern from "fcl/math/transform.h" namespace "fcl":
         Transform3f() except +
         Transform3f(Matrix3f& R_, Vec3f& T_)
         Transform3f(Quaternion3f& q_, Vec3f& T_)
+        Matrix3f& getRotation()
+        Vec3f& getTranslation()
 
 cdef extern from "fcl/collision_data.h" namespace "fcl":
 
@@ -164,6 +166,7 @@ cdef extern from "fcl/collision_object.h" namespace "fcl":
         Vec3f& getTranslation()
         Matrix3f& getRotation()
         Quaternion3f& getQuatRotation()
+        Transform3f& getTransform()
         CollisionGeometry* getCollisionGeometry()
         void setTranslation(Vec3f& T)
         void setRotation(Matrix3f& M)
@@ -171,6 +174,8 @@ cdef extern from "fcl/collision_object.h" namespace "fcl":
         void setTransform(Quaternion3f& q, Vec3f& T)
         void setTransform(Matrix3f& q, Vec3f& T)
         void setTransform(Transform3f& tf)
+        void setUserData(void *data)
+        void *getUserData()
         bool isOccupied()
         bool isFree()
         bool isUncertain()

@@ -32,6 +32,7 @@ cdef class CollisionObject:
                         defs.Transform3f(numpy_to_mat3f(tf[:3,:3]), numpy_to_vec3f(tf[:3,3])))
             else:
                 self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](geom.thisptr))
+            self.thisptr.setUserData(<void*> self.geom) # Save the python geometry object for later retrieval
         else:
             if not self._no_instance:
                 raise ValueError
@@ -494,8 +495,8 @@ def distance(CollisionObject o1, CollisionObject o2, request):
     dis_res.min_distance = result.min_distance
     dis_res.nearest_points = [vec3f_to_numpy(result.nearest_points[0]),
                               vec3f_to_numpy(result.nearest_points[1])]
-    dis_res.o1 = (<CollisionGeometry?> o1.geom) if result.o1 == (<CollisionGeometry?> o1.geom).thisptr else (<CollisionGeometry?> o2.geom)
-    dis_res.o2 = (<CollisionGeometry?> o1.geom) if result.o2 == (<CollisionGeometry?> o1.geom).thisptr else (<CollisionGeometry?> o2.geom)
+    dis_res.o1 = c_to_python_collision_geometry(result.o1, o1, o2)
+    dis_res.o1 = c_to_python_collision_geometry(result.o1, o1, o2)
     dis_res.b1 = result.b1
     dis_res.b2 = result.b2
     return dis, dis_res
@@ -556,8 +557,8 @@ cdef defs.Vec3f numpy_to_vec3f(a):
 
 cdef mat3f_to_numpy(defs.Matrix3f m):
     return numpy.array([[m(0,0), m(0,1), m(0,2)],
-                       [m(1,0), m(1,1), m(1,2)],
-                       [m(2,0), m(2,1), m(2,2)]])
+                        [m(1,0), m(1,1), m(1,2)],
+                        [m(2,0), m(2,1), m(2,2)]])
 
 cdef defs.Matrix3f numpy_to_mat3f(a):
     return defs.Matrix3f(<double?> a[0][0], <double?> a[0][1], <double?> a[0][2],
@@ -567,10 +568,18 @@ cdef defs.Matrix3f numpy_to_mat3f(a):
 cdef defs.Transform3f numpy_to_transform3f(tf):
     return defs.Transform3f(numpy_to_mat3f(tf[:3,:3]), numpy_to_vec3f(tf[:3,3]))
 
+cdef c_to_python_collision_geometry(defs.const_CollisionGeometry*geom, CollisionObject o1, CollisionObject o2):
+    cdef CollisionGeometry o1_py_geom = <CollisionGeometry> ((<defs.CollisionObject*> o1.thisptr).getUserData())
+    cdef CollisionGeometry o2_py_geom = <CollisionGeometry> ((<defs.CollisionObject*> o2.thisptr).getUserData())
+    if geom == <defs.const_CollisionGeometry*> o1_py_geom.thisptr:
+        return o1_py_geom
+    else:
+        return o2_py_geom
+
 cdef c_to_python_contact(defs.Contact contact, CollisionObject o1, CollisionObject o2):
     c = Contact()
-    c.o1 = (<CollisionGeometry?> o1.geom) if contact.o1 == (<CollisionGeometry?> o1.geom).thisptr else (<CollisionGeometry?> o2.geom)
-    c.o2 = (<CollisionGeometry?> o1.geom) if contact.o2 == (<CollisionGeometry?> o1.geom).thisptr else (<CollisionGeometry?> o2.geom)
+    c.o1 = c_to_python_collision_geometry(contact.o1, o1, o2)
+    c.o2 = c_to_python_collision_geometry(contact.o2, o1, o2)
     c.b1 = contact.b1
     c.b2 = contact.b2
     c.normal = vec3f_to_numpy(contact.normal)
@@ -587,7 +596,8 @@ cdef c_to_python_costsource(defs.CostSource cost_source):
     return c
 
 cdef copy_ptr_collision_object(defs.CollisionObject*cobj):
-    co = CollisionObject(_no_instance=True)
+    geom = <CollisionGeometry> cobj.getUserData()
+    co = CollisionObject(geom, _no_instance=True)
     (<CollisionObject> co).thisptr = cobj
     return co
 

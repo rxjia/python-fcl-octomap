@@ -1,9 +1,13 @@
 import numpy as np
+import pdb
 from fcl import fcl, collision_data
 
-objs = [fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0)),
-        fcl.CollisionObject(fcl.Sphere(4.0)),
-        fcl.CollisionObject(fcl.Cone(5.0, 6.0))]
+box = fcl.Box(1.0, 2.0, 3.0)
+sphere = fcl.Sphere(4.0)
+cone = fcl.Cone(5.0, 6.0)
+objs = [fcl.CollisionObject(box),
+        fcl.CollisionObject(sphere),
+        fcl.CollisionObject(cone)]
 
 # Register objects to DynamicAABBTreeCollisionManager
 manager = fcl.DynamicAABBTreeCollisionManager()
@@ -13,10 +17,16 @@ print("After register 1 : ", manager.size())
 manager.registerObject(fcl.CollisionObject(fcl.Cylinder(7.0, 8.0)))
 print("After register 2 : ", manager.size())
 
+print box
+print sphere
+print cone
+
 # Use Callback function
 def cb_func(obj1, obj2, res):
     print("cb_func start")
     ret, res = fcl.collide(obj1, obj2, collision_data.CollisionRequest())
+    print res.contacts[0].o1
+    print res.contacts[0].o2
     print("result: ", ret)
     return ret
 res = collision_data.CollisionResult()

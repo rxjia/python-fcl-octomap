@@ -1,5 +1,7 @@
 import sys
 
+import numpy as np
+
 class OBJECT_TYPE:
     OT_UNKNOWN, OT_BVH, OT_GEOM, OT_OCTREE, OT_COUNT = range(5)
 
@@ -27,24 +29,22 @@ class CCDSolverType:
 class GJKSolverType:
     GST_LIBCCD, GST_INDEP = range(2)
 
+class Contact:
+    def __init__(self):
+        self.o1 = None
+        self.o2 = None
+        self.b1 = 0
+        self.b2 = 0
+        self.normal = np.array([0.0, 0.0, 0.0])
+        self.pos = np.array([0.0, 0.0, 0.0])
+        self.penetration_depth = 0.0
 
 class CostSource:
     def __init__(self):
-        self.aabb_min = [0.0, 0.0, 0.0]
+        self.aabb_min = np.array([0.0, 0.0, 0.0])
+        self.aabb_max = np.array([0.0, 0.0, 0.0])
         self.cost_density = 0.0
         self.total_cost = 0.0
-
-
-class CollisionResult:
-    def __init__(self):
-        self.contacts = []
-        self.cost_sources = []
-
-
-class ContinuousCollisionResult:
-    def __init__(self, is_collide=False, time_of_contact=1.0):
-        self.is_collide = is_collide
-        self.time_of_contact = time_of_contact
 
 class CollisionRequest:
     def __init__(self,
@@ -52,13 +52,20 @@ class CollisionRequest:
                  enable_contact=False,
                  num_max_cost_sources=1,
                  enable_cost=False,
-                 use_approximate_cost=True):
+                 use_approximate_cost=True,
+                 gjk_solver_type=GJKSolverType.GST_LIBCCD):
         self.num_max_contacts = num_max_contacts
         self.enable_contact = enable_contact
         self.num_max_cost_sources = num_max_cost_sources
         self.enable_cost = enable_cost
         self.use_approximate_cost = use_approximate_cost
+        self.gjk_solver_type = gjk_solver_type
 
+class CollisionResult:
+    def __init__(self, is_collision=False):
+        self.is_collision = False
+        self.contacts = []
+        self.cost_sources = []
 
 class ContinuousCollisionRequest:
     def __init__(self,
@@ -73,6 +80,18 @@ class ContinuousCollisionRequest:
         self.gjk_solver_type = gjk_solver_type
         self.ccd_solver_type = ccd_solver_type
 
+class ContinuousCollisionResult:
+    def __init__(self, is_collide=False, time_of_contact=1.0):
+        self.is_collide = is_collide
+        self.time_of_contact = time_of_contact
+
+class DistanceRequest:
+    def __init__(self,
+                 enable_nearest_points=False,
+                 gjk_solver_type=GJKSolverType.GST_LIBCCD):
+        self.enable_nearest_points = enable_nearest_points
+        self.gjk_solver_type = gjk_solver_type
+
 class DistanceResult:
     def __init__(self, min_distance_=sys.float_info.max):
         self.min_distance = min_distance_
@@ -83,7 +102,3 @@ class DistanceResult:
         self.b2 = -1
 
 
-class DistanceRequest:
-    def __init__(self,
-                 enable_nearest_points_=False):
-        self.enable_nearest_points = enable_nearest_points_

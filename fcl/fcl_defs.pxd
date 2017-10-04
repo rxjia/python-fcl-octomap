@@ -83,6 +83,7 @@ cdef extern from "fcl/collision_data.h" namespace "fcl":
 
     cdef cppclass CollisionResult:
         CollisionResult() except +
+        bool isCollision()
         void getContacts(vector[Contact]& contacts_)
         void getCostSources(vector[CostSource]& cost_sources_)
 
@@ -98,11 +99,13 @@ cdef extern from "fcl/collision_data.h" namespace "fcl":
         size_t num_max_cost_sources
         bool enable_cost
         bool use_approximate_cost
+        GJKSolverType gjk_solver_type
         CollisionRequest(size_t num_max_contacts_,
                          bool enable_contact_,
                          size_t num_max_cost_sources_,
                          bool enable_cost_,
-                         bool use_approximate_cost_)
+                         bool use_approximate_cost_,
+                         GJKSolverType gjk_solver_type_)
 
     cdef cppclass ContinuousCollisionRequest:
          size_t num_max_iterations_,
@@ -130,7 +133,8 @@ cdef extern from "fcl/collision_data.h" namespace "fcl":
 
     cdef cppclass DistanceRequest:
         bool enable_nearest_points
-        DistanceRequest(bool enable_nearest_points_) except +
+        GJKSolverType gjk_solver_type
+        DistanceRequest(bool enable_nearest_points_, GJKSolverType gjk_solver_type_) except +
 
 cdef extern from "fcl/collision_object.h" namespace "fcl":
     cdef enum OBJECT_TYPE:
@@ -162,8 +166,11 @@ cdef extern from "fcl/collision_object.h" namespace "fcl":
         Quaternion3f& getQuatRotation()
         CollisionGeometry* getCollisionGeometry()
         void setTranslation(Vec3f& T)
+        void setRotation(Matrix3f& M)
         void setQuatRotation(Quaternion3f& q)
         void setTransform(Quaternion3f& q, Vec3f& T)
+        void setTransform(Matrix3f& q, Vec3f& T)
+        void setTransform(Transform3f& tf)
         bool isOccupied()
         bool isFree()
         bool isUncertain()

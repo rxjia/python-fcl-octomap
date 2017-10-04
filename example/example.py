@@ -1,4 +1,5 @@
-from fcl import fcl, transform, collision_data
+import numpy as np
+from fcl import fcl, collision_data
 
 objs = [fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0)),
         fcl.CollisionObject(fcl.Sphere(4.0)),
@@ -22,11 +23,11 @@ res = collision_data.CollisionResult()
 manager.collide(res, cb_func)
 
 # Collision calculation
-ret, result = fcl.collide(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
-                                              transform.Transform(transform.Quaternion(), [10.0, 0.0, 0.0])),
-                          fcl.CollisionObject(fcl.Sphere(4.0),
-                                              transform.Transform(transform.Quaternion(), [-10.0, 0.0, 0.0])),
-                          collision_data.CollisionRequest())
+b = fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0))
+b.setTranslation(np.array([10.0, 0.0, 0.0]))
+s = fcl.CollisionObject(fcl.Sphere(4.0))
+s.setTranslation(np.array([-10.0, 0.0, 0.0]))
+ret, result = fcl.collide(b, s, collision_data.CollisionRequest())
 
 print("-- Collision result: ", ret)
 for contact in result.contacts:
@@ -35,10 +36,12 @@ for contact in result.contacts:
 for cost_source in result.cost_sources:
     print(cost_source)
 
-dis, result = fcl.distance(fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0),
-                                               transform.Transform(transform.Quaternion(), [10.0, 0.0, 0.0])),
-                           fcl.CollisionObject(fcl.Sphere(4.0),
-                                               transform.Transform(transform.Quaternion(), [-10.0, 0.0, 0.0])),
+b = fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0))
+b.setTranslation(np.array([10.0, 0.0, 0.0]))
+s = fcl.CollisionObject(fcl.Sphere(4.0))
+s.setTranslation(np.array([-10.0, 0.0, 0.0]))
+
+dis, result = fcl.distance(b, s,
                            collision_data.DistanceRequest(True))
 
 print("-- Distance result: ", dis)

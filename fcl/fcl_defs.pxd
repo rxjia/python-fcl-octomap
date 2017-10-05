@@ -50,8 +50,16 @@ cdef extern from "fcl/math/transform.h" namespace "fcl":
         Transform3f() except +
         Transform3f(Matrix3f& R_, Vec3f& T_)
         Transform3f(Quaternion3f& q_, Vec3f& T_)
+        Transform3f(Matrix3f& R_)
+        Transform3f(Quaternion3f& q_)
+        Transform3f(Vec3f& T_)
+        Transform3f(Transform3f& tf_)
         Matrix3f& getRotation()
         Vec3f& getTranslation()
+        Quaternion3f& getQuatRotation()
+        void setRotation(Matrix3f& R_)
+        void setTranslation(Vec3f& T_)
+        void setQuatRotation(Quaternion3f & q_)
 
 cdef extern from "fcl/collision_data.h" namespace "fcl":
 

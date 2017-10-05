@@ -17,16 +17,12 @@ print("After register 1 : ", manager.size())
 manager.registerObject(fcl.CollisionObject(fcl.Cylinder(7.0, 8.0)))
 print("After register 2 : ", manager.size())
 
-print box
-print sphere
-print cone
-
 # Use Callback function
 def cb_func(obj1, obj2, res):
     print("cb_func start")
-    ret, res = fcl.collide(obj1, obj2, collision_data.CollisionRequest())
-    print res.contacts[0].o1
-    print res.contacts[0].o2
+    res = collision_data.CollisionResult()
+    ret = fcl.collide(obj1, obj2, collision_data.CollisionRequest(), res)
+    ret = fcl.collide(obj1, obj2)
     print("result: ", ret)
     return ret
 res = collision_data.CollisionResult()
@@ -37,7 +33,8 @@ b = fcl.CollisionObject(fcl.Box(1.0, 2.0, 3.0))
 b.setTranslation(np.array([10.0, 0.0, 0.0]))
 s = fcl.CollisionObject(fcl.Sphere(4.0))
 s.setTranslation(np.array([-10.0, 0.0, 0.0]))
-ret, result = fcl.collide(b, s, collision_data.CollisionRequest())
+result = collision_data.CollisionResult()
+ret = fcl.collide(b, s, collision_data.CollisionRequest(), result)
 
 print("-- Collision result: ", ret)
 for contact in result.contacts:
@@ -51,8 +48,8 @@ b.setTranslation(np.array([10.0, 0.0, 0.0]))
 s = fcl.CollisionObject(fcl.Sphere(4.0))
 s.setTranslation(np.array([-10.0, 0.0, 0.0]))
 
-dis, result = fcl.distance(b, s,
-                           collision_data.DistanceRequest(True))
+result = collision_data.DistanceResult()
+dis  = fcl.distance(b, s, collision_data.DistanceRequest(True), result)
 
 print("-- Distance result: ", dis)
 print(result.nearest_points)

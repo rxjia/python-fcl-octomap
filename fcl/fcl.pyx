@@ -11,7 +11,66 @@ import numpy
 ctypedef np.float64_t DOUBLE_t
 
 cimport fcl_defs as defs
-from collision_data import Contact, CostSource, CollisionResult, ContinuousCollisionResult, DistanceResult
+from collision_data import Contact, CostSource, CollisionRequest, ContinuousCollisionRequest, CollisionResult, ContinuousCollisionResult, DistanceRequest, DistanceResult
+
+###############################################################################
+# Transforms
+###############################################################################
+cdef class Transform:
+    cdef defs.Transform3f *thisptr
+
+    def __cinit__(self, *args):
+        if len(args) == 0:
+            self.thisptr = new defs.Transform3f()
+        elif len(args) == 1:
+            if isinstance(args[0], Transform):
+                self.thisptr = new defs.Transform3f(deref((<Transform> args[0]).thisptr))
+            else:
+                data = numpy.array(args[0])
+                if data.shape == (3,3):
+                    self.thisptr = new defs.Transform3f(numpy_to_mat3f(data))
+                elif data.shape == (4,):
+                    self.thisptr = new defs.Transform3f(numpy_to_quaternion3f(data))
+                elif data.shape == (3,):
+                    self.thisptr = new defs.Transform3f(numpy_to_vec3f(data))
+                else:
+                    raise ValueError('Invalid input to Transform().')
+        elif len(args) == 2:
+            rot = numpy.array(args[0])
+            trans = numpy.array(args[1]).squeeze()
+            if not trans.shape == (3,):
+                raise ValueError('Translation must be (3,).')
+
+            if rot.shape == (3,3):
+                self.thisptr = new defs.Transform3f(numpy_to_mat3f(rot), numpy_to_vec3f(trans))
+            elif rot.shape == (4,):
+                self.thisptr = new defs.Transform3f(numpy_to_quaternion3f(rot), numpy_to_vec3f(trans))
+            else:
+                raise ValueError('Invalid input to Transform().')
+        else:
+            raise ValueError('Too many arguments to Transform().')
+
+    def __dealloc__(self):
+        if self.thisptr:
+            free(self.thisptr)
+
+    def getRotation(self):
+        return mat3f_to_numpy(self.thisptr.getRotation())
+
+    def getTranslation(self):
+        return vec3f_to_numpy(self.thisptr.getTranslation())
+
+    def getQuatRotation(self):
+        return quaternion3f_to_numpy(self.thisptr.getQuatRotation())
+
+    def setRotation(self, R):
+        self.thisptr.setRotation(numpy_to_mat3f(R))
+
+    def setTranslation(self, T):
+        self.thisptr.setTranslation(numpy_to_vec3f(T))
+
+    def setQuatRotation(self, q):
+        self.thisptr.setQuatRotation(numpy_to_quaternion3f(q))
 
 ###############################################################################
 # Collision objects and geometries
@@ -22,14 +81,13 @@ cdef class CollisionObject:
     cdef defs.PyObject *geom
     cdef bool _no_instance
 
-    def __cinit__(self, CollisionGeometry geom=CollisionGeometry(), tf=None, _no_instance=False):
+    def __cinit__(self, CollisionGeometry geom=CollisionGeometry(), Transform tf=None, _no_instance=False):
         defs.Py_INCREF(<defs.PyObject*> geom)
         self.geom = <defs.PyObject*> geom
         self._no_instance = _no_instance
         if geom.getNodeType() is not None:
             if tf is not None:
-                self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](geom.thisptr),
-                        defs.Transform3f(numpy_to_mat3f(tf[:3,:3]), numpy_to_vec3f(tf[:3,3])))
+                self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](geom.thisptr), deref(tf.thisptr))
             else:
                 self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](geom.thisptr))
             self.thisptr.setUserData(<void*> self.geom) # Save the python geometry object for later retrieval
@@ -60,16 +118,19 @@ cdef class CollisionObject:
     def setRotation(self, mat):
         self.thisptr.setRotation(numpy_to_mat3f(mat))
 
+    def getQuatRotation(self):
+        return quaternion3f_to_numpy(self.thisptr.getQuatRotation())
+
+    def setQuatRotation(self, q):
+        self.thisptr.setQuatRotation(numpy_to_quaternion3f(q))
+
     def getTransform(self):
         rot = self.getRotation()
         trans = self.getTranslation()
-        tf = numpy.eye(4)
-        tf[:3,:3] = rot
-        tf[:3,3] = trans
-        return tf
+        return Transform(rot, trans)
 
     def setTransform(self, tf):
-        self.thisptr.setTransform(numpy_to_transform3f(tf))
+        self.thisptr.setTransform(deref((<Transform> tf).thisptr))
 
     def isOccupied(self):
         return self.thisptr.isOccupied()
@@ -335,6 +396,23 @@ cdef class DynamicAABBTreeCollisionManager:
             self.objs.remove(obj)
             self.thisptr.unregisterObject((<CollisionObject?> obj).thisptr)
 
+    def setup(self):
+        self.thisptr.setup()
+
+    def update(self, arg=None):
+        cdef vector[defs.CollisionObject*] objs
+        if hasattr(arg, "__len__"):
+            for a in arg:
+                objs.push_back((<CollisionObject?> a).thisptr)
+            self.thisptr.update(objs)
+        elif arg is None:
+            self.thisptr.update()
+        else:
+            self.thisptr.update((<CollisionObject?> arg).thisptr)
+
+    def getObjects(self):
+        return list(self.objs)
+
     def collide(self, *args):
         if len(args) == 2 and inspect.isfunction(args[1]):
             fn = CollisionFunction(args[1], args[0])
@@ -360,20 +438,6 @@ cdef class DynamicAABBTreeCollisionManager:
             self.thisptr.distance((<CollisionObject?> args[0]).thisptr, <void*> fn, DistanceCallBack)
         else:
             raise ValueError
-
-    def setup(self):
-        self.thisptr.setup()
-
-    def update(self, arg=None):
-        cdef vector[defs.CollisionObject*] objs
-        if hasattr(arg, "__len__"):
-            for a in arg:
-                objs.push_back((<CollisionObject?> a).thisptr)
-            self.thisptr.update(objs)
-        elif arg is None:
-            self.thisptr.update()
-        else:
-            self.thisptr.update((<CollisionObject?> arg).thisptr)
 
     def clear(self):
         self.thisptr.clear()
@@ -430,76 +494,81 @@ cdef class DynamicAABBTreeCollisionManager:
 # Collision and distance functions
 ###############################################################################
 
-def collide(CollisionObject o1, CollisionObject o2, request):
-    cdef defs.CollisionResult result
+def collide(CollisionObject o1, CollisionObject o2,
+            request=CollisionRequest(),
+            result=CollisionResult()):
 
-    cdef size_t ret = defs.collide(o1.thisptr,
-                                   o2.thisptr,
-                                   defs.CollisionRequest(<size_t?> request.num_max_contacts,
-                                                         <bool?> request.enable_contact,
-                                                         <size_t?> request.num_max_cost_sources,
-                                                         <bool> request.enable_cost,
-                                                         <bool> request.use_approximate_cost,
-                                                         <defs.GJKSolverType?> request.gjk_solver_type),
-                                   result)
+    cdef defs.CollisionResult cresult
 
-    col_res = CollisionResult()
-    col_res.is_collision = result.isCollision()
+    cdef size_t ret = defs.collide(o1.thisptr, o2.thisptr,
+                                   defs.CollisionRequest(
+                                       <size_t?> request.num_max_contacts,
+                                       <bool?> request.enable_contact,
+                                       <size_t?> request.num_max_cost_sources,
+                                       <bool> request.enable_cost,
+                                       <bool> request.use_approximate_cost,
+                                       <defs.GJKSolverType?> request.gjk_solver_type
+                                   ),
+                                   cresult)
+
+    result.is_collision = cresult.isCollision()
 
     cdef vector[defs.Contact] contacts
-    result.getContacts(contacts)
+    cresult.getContacts(contacts)
     for idx in range(contacts.size()):
-        col_res.contacts.append(c_to_python_contact(contacts[idx], o1, o2))
+        result.contacts.append(c_to_python_contact(contacts[idx], o1, o2))
 
     cdef vector[defs.CostSource] costs
-    result.getCostSources(costs)
+    cresult.getCostSources(costs)
     for idx in range(costs.size()):
-        col_res.cost_sources.append(c_to_python_costsource(costs[idx]))
+        result.cost_sources.append(c_to_python_costsource(costs[idx]))
 
-    return ret, col_res
+    return ret
 
-def continuousCollide(CollisionObject o1, tf1_end,
-                      CollisionObject o2, tf2_end,
-                      request):
+def continuousCollide(CollisionObject o1, Transform tf1_end,
+                      CollisionObject o2, Transform tf2_end,
+                      request = ContinuousCollisionRequest(),
+                      result = ContinuousCollisionResult()):
 
-    cdef defs.ContinuousCollisionResult result
+    cdef defs.ContinuousCollisionResult cresult
 
-    cdef defs.FCL_REAL ret = defs.continuousCollide(
-                        o1.thisptr,
-                        numpy_to_transform3f(tf1_end),
-                        o2.thisptr,
-                        numpy_to_transform3f(tf2_end),
-                        defs.ContinuousCollisionRequest(
-                                             <size_t?>             request.num_max_iterations,
-                                             <defs.FCL_REAL?>      request.toc_err,
-                                             <defs.CCDMotionType?> request.ccd_motion_type,
-                                             <defs.GJKSolverType?> request.gjk_solver_type,
-                                             <defs.CCDSolverType?> request.ccd_solver_type,
-                        ),
-                        result
-    )
+    cdef defs.FCL_REAL ret = defs.continuousCollide(o1.thisptr, deref(tf1_end.thisptr),
+                                                    o2.thisptr, deref(tf2_end.thisptr),
+                                                    defs.ContinuousCollisionRequest(
+                                                        <size_t?>             request.num_max_iterations,
+                                                        <defs.FCL_REAL?>      request.toc_err,
+                                                        <defs.CCDMotionType?> request.ccd_motion_type,
+                                                        <defs.GJKSolverType?> request.gjk_solver_type,
+                                                        <defs.CCDSolverType?> request.ccd_solver_type,
 
-    col_res = ContinuousCollisionResult()
-    col_res.is_collide = result.is_collide
-    col_res.time_of_contact = result.time_of_contact
-    return ret, col_res
+                                                    ),
+                                                    cresult)
 
-def distance(CollisionObject o1, CollisionObject o2, request):
-    cdef defs.DistanceResult result
-    cdef double dis = defs.distance(o1.thisptr,
-                                    o2.thisptr,
-                                    defs.DistanceRequest(<bool?> request.enable_nearest_points,
-                                    <defs.GJKSolverType?> request.gjk_solver_type),
-                                    result)
-    dis_res = DistanceResult()
-    dis_res.min_distance = result.min_distance
-    dis_res.nearest_points = [vec3f_to_numpy(result.nearest_points[0]),
-                              vec3f_to_numpy(result.nearest_points[1])]
-    dis_res.o1 = c_to_python_collision_geometry(result.o1, o1, o2)
-    dis_res.o1 = c_to_python_collision_geometry(result.o1, o1, o2)
-    dis_res.b1 = result.b1
-    dis_res.b2 = result.b2
-    return dis, dis_res
+    result.is_collide = cresult.is_collide
+    result.time_of_contact = cresult.time_of_contact
+    return ret
+
+def distance(CollisionObject o1, CollisionObject o2,
+             request = DistanceRequest(),
+             result = DistanceResult()):
+
+    cdef defs.DistanceResult cresult
+
+    cdef double dis = defs.distance(o1.thisptr, o2.thisptr,
+                                    defs.DistanceRequest(
+                                        <bool?> request.enable_nearest_points,
+                                        <defs.GJKSolverType?> request.gjk_solver_type
+                                    ),
+                                    cresult)
+
+    result.min_distance = cresult.min_distance
+    result.nearest_points = [vec3f_to_numpy(cresult.nearest_points[0]),
+                             vec3f_to_numpy(cresult.nearest_points[1])]
+    result.o1 = c_to_python_collision_geometry(cresult.o1, o1, o2)
+    result.o1 = c_to_python_collision_geometry(cresult.o1, o1, o2)
+    result.b1 = cresult.b1
+    result.b2 = cresult.b2
+    return dis
 
 ###############################################################################
 # Collision and Distance Callback Functions
@@ -549,6 +618,12 @@ cdef inline bool DistanceCallBack(defs.CollisionObject*o1, defs.CollisionObject*
 # Helper Functions
 ###############################################################################
 
+cdef quaternion3f_to_numpy(defs.Quaternion3f q):
+    return numpy.array([q.getW(), q.getX(), q.getY(), q.getZ()])
+
+cdef defs.Quaternion3f numpy_to_quaternion3f(a):
+    return defs.Quaternion3f(<double?> a[0], <double?> a[1], <double?> a[2], <double?> a[3])
+
 cdef vec3f_to_numpy(defs.Vec3f vec):
     return numpy.array([vec[0], vec[1], vec[2]])
 
@@ -564,9 +639,6 @@ cdef defs.Matrix3f numpy_to_mat3f(a):
     return defs.Matrix3f(<double?> a[0][0], <double?> a[0][1], <double?> a[0][2],
                          <double?> a[1][0], <double?> a[1][1], <double?> a[1][2],
                          <double?> a[2][0], <double?> a[2][1], <double?> a[2][2])
-
-cdef defs.Transform3f numpy_to_transform3f(tf):
-    return defs.Transform3f(numpy_to_mat3f(tf[:3,:3]), numpy_to_vec3f(tf[:3,3]))
 
 cdef c_to_python_collision_geometry(defs.const_CollisionGeometry*geom, CollisionObject o1, CollisionObject o2):
     cdef CollisionGeometry o1_py_geom = <CollisionGeometry> ((<defs.CollisionObject*> o1.thisptr).getUserData())

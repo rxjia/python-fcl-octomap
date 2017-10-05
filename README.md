@@ -2,12 +2,12 @@
 
 FCL-Python is an (unofficial) Python interface for the [Flexible Collision Library (FCL)](https://github.com/flexible-collision-library/fcl),
 an excellent C++ library for performing proximity and collision queries on pairs of geometric models.
-Currently, this package is targeted to FCL 0.5.0.
+Currently, this package is targeted for FCL 0.5.0.
 
 This package supports three types of proximity queries for pairs of geometric models:
 * __Collision Detection__: Detecting whether two models overlap (and optionally where).
 * __Distance Computation__: Computing the minimum distance between a pair of models.
-* __Continuous Collision Detection__: Detecting whether two moving models overlap during movement (and optionally the time of contact).
+* __Continuous Collision Detection__: Detecting whether two models overlap during motion (and optionally the time of contact).
 
 This package also supports most of FCL's object shapes, including:
 * TriangleP
@@ -24,8 +24,8 @@ This package also supports most of FCL's object shapes, including:
 ## Installation
 
 First, install FCL using the instructions provided [here](https://github.com/flexible-collision-library/fcl).
-If you're on Ubuntu 17.04 or newer, you can install FCL using `sudo apt-get install libfcl-dev`. This should also work on Ubuntu 16.04 and 16.10, but the default package for those versions is FCL 0.3.2-1.
-Otherwise, just compile FCL from source -- it's quick and easy, and its dependencies are all easily installed via `apt`.
+If you're on Ubuntu 17.04 or newer, you can install FCL using `sudo apt-get install libfcl-dev`.
+Otherwise, just compile FCL from source -- it's quick and easy, and its dependencies are all easily installed via `apt` or `brew`.
 
 In order to install the Python wrappers for FCL, simply run
 ```shell
@@ -33,7 +33,6 @@ pip install python-fcl
 ```
 
 ## Objects
-The interfaces to FCL are approximately the same as the ones provided by the C++ interface.
 
 ### Collision Objects
 The primary construct in FCL is the `CollisionObject`, which forms the backbone of all collision and distance computations.
@@ -130,13 +129,15 @@ obj.setQuatRotation(q2)
 ### Pairwise Operations
 
 Given a pair of collision objects, this library supports three types of queries:
-* __Collision Detection__: Detecting whether two models overlap (and optionally where).
-* __Distance Computation__: Computing the minimum distance between a pair of models.
-* __Continuous Collision Detection__: Detecting whether two moving models overlap during movement (and optionally the time of contact).
+* __Collision Detection__
+* __Distance Computation__
+* __Continuous Collision Detection__
 
 The interfaces for each of these operations follow a common pipeline.
-First, a query request data structure is initialized and populated and an empty query response structure is initialized. Then, the query function is called and passed the two `CollisionObject` items and the request and response.
-A scalar result is returned by the query function, and additional information is stored in the query result data structure.
+First, a query request data structure is initialized and populated with parameters.
+Then, an empty query response structure is initialized.
+Finally, the query function is called with the two `CollisionObject` items, the request structure, and the response structure as arguments.
+The query function returns a scalar result, and any additional information is stored in the query result data structure.
 Examples of all three operations are shown below.
 
 #### Collision Checking
@@ -209,7 +210,7 @@ For more information about available parameters for continuous collision request
 see `fcl/collision_data.py`.
 
 ### Broadphase Checking
-In addition to pairwise checks, FCL supports broadphase collision/distance between groups of objects and can avoid n-squared complexity.
+In addition to pairwise checks, FCL supports broadphase collision/distance queries between groups of objects and can avoid n-squared complexity.
 Specifically, `CollisionObject` items are registered with a `DynamicAABBTreeCollisionManager` before collision or distance checking is performed.
 
 Three types of checks are possible:
@@ -271,3 +272,5 @@ print 'Contacts:'
 for c in rdata.result.contacts:
     print '\tO1: {}, O2: {}'.format(c.o1, c.o2)
 ```
+
+For more examples, see `example/example.py`.

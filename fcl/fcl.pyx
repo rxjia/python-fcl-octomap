@@ -227,6 +227,16 @@ cdef class Sphere(CollisionGeometry):
         def __set__(self, value):
             (<defs.Sphere*> self.thisptr).radius = <double?> value
 
+cdef class Ellipsoid(CollisionGeometry):
+    def __cinit__(self, a, b, c):
+        self.thisptr = new defs.Ellipsoid(<double?> a, <double?> b, <double?> c)
+
+    property radii:
+        def __get__(self):
+            return vec3f_to_numpy((<defs.Ellipsoid*> self.thisptr).radii)
+        def __set__(self, values):
+            (<defs.Ellipsoid*> self.thisptr).radii = numpy_to_vec3f(values)
+
 cdef class Capsule(CollisionGeometry):
     def __cinit__(self, radius, lz):
         self.thisptr = new defs.Capsule(radius, lz)
@@ -327,7 +337,7 @@ cdef class BVHModel(CollisionGeometry):
     def buildState(self):
         return (<defs.BVHModel*> self.thisptr).build_state
 
-    def beginModel(self, num_tris_, num_vertices_):
+    def beginModel(self, num_tris_=0, num_vertices_=0):
         n = (<defs.BVHModel*> self.thisptr).beginModel(<int?> num_tris_, <int?> num_vertices_)
         return n
 
@@ -336,13 +346,26 @@ cdef class BVHModel(CollisionGeometry):
         return n
 
     def addVertex(self, x, y, z):
-        (<defs.BVHModel*> self.thisptr).addVertex(defs.Vec3f(<double?> x, <double?> y, <double?> z))
-        return True
+        n = (<defs.BVHModel*> self.thisptr).addVertex(defs.Vec3f(<double?> x, <double?> y, <double?> z))
+        return self._check_ret_value(n)
 
     def addTriangle(self, v1, v2, v3):
         n = (<defs.BVHModel*> self.thisptr).addTriangle(numpy_to_vec3f(v1),
                                                         numpy_to_vec3f(v2),
                                                         numpy_to_vec3f(v3))
+        return self._check_ret_value(n)
+
+    def addSubModel(self, verts, triangles):
+        cdef vector[defs.Vec3f] ps
+        cdef vector[defs.Triangle] tris
+        for vert in verts:
+            ps.push_back(numpy_to_vec3f(vert))
+        for tri in triangles:
+            tris.push_back(defs.Triangle(<size_t?> tri[0], <size_t?> tri[1], <size_t?> tri[2]))
+        n = (<defs.BVHModel*> self.thisptr).addSubModel(ps, tris)
+        return self._check_ret_value(n)
+
+    def _check_ret_value(self, n):
         if n == defs.BVH_OK:
             return True
         elif n == defs.BVH_ERR_MODEL_OUT_OF_MEMORY:
@@ -363,6 +386,7 @@ cdef class BVHModel(CollisionGeometry):
             raise ValueError("Unknown failure")
         else:
             return False
+
 
 ###############################################################################
 # Collision managers

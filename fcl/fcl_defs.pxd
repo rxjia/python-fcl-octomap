@@ -151,8 +151,8 @@ cdef extern from "fcl/collision_object.h" namespace "fcl":
         OT_UNKNOWN, OT_BVH, OT_GEOM, OT_OCTREE, OT_COUNT
     cdef enum NODE_TYPE:
         BV_UNKNOWN, BV_AABB, BV_OBB, BV_RSS, BV_kIOS, BV_OBBRSS, BV_KDOP16, BV_KDOP18, BV_KDOP24,
-        GEOM_BOX, GEOM_SPHERE, GEOM_CAPSULE, GEOM_CONE, GEOM_CYLINDER, GEOM_CONVEX, GEOM_PLANE,
-        GEOM_HALFSPACE, GEOM_TRIANGLE, GEOM_OCTREE, NODE_COUNT
+        GEOM_BOX, GEOM_SPHERE, GEOM_ELLIPSOID, GEOM_CAPSULE, GEOM_CONE, GEOM_CYLINDER, GEOM_CONVEX,
+        GEOM_PLANE, GEOM_HALFSPACE, GEOM_TRIANGLE, GEOM_OCTREE, NODE_COUNT
 
     cdef cppclass CollisionGeometry:
         CollisionGeometry() except +
@@ -206,7 +206,10 @@ cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
     cdef cppclass Sphere(ShapeBase):
         Sphere(FCL_REAL radius_) except +
         FCL_REAL radius
-        FCL_REAL radius
+
+    cdef cppclass Ellipsoid(ShapeBase):
+        Ellipsoid(FCL_REAL a_, FCL_REAL b_, FCL_REAL c_) except +
+        Vec3f radii
 
     cdef cppclass Capsule(ShapeBase):
         Capsule(FCL_REAL radius_, FCL_REAL lz_) except +
@@ -329,7 +332,9 @@ cdef extern from "fcl/BVH/BVH_internal.h" namespace "fcl":
 
 cdef extern from "fcl/data_types.h" namespace "fcl":
     cdef cppclass Triangle:
-        size_t vids
+        Triangle() except +
+        Triangle(size_t p1, size_t p2, size_t p3) except +
+        size_t vids[3]
 
 cdef extern from "fcl/BVH/BV_splitter.h" namespace "fcl":
     cdef cppclass BVSplitterBase:
@@ -374,16 +379,16 @@ cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
 
         int beginModel(int num_tris_, int num_vertices_)
 
-        Vec3f addVertex(const Vec3f& p)
+        int addVertex(const Vec3f& p)
 
         int addTriangle(const Vec3f& p1, const Vec3f& p2, const Vec3f& p3)
 
-        # int addSubModel(const std::vector<Vec3f>& ps)
+        #int addSubModel(const std::vector<Vec3f>& ps)
         # void getCostSources(vector[CostSource]& cost_sources_)
 
-        # int addSubModel(const vector[Vec3f]& ps)
+        #int addSubModel(const vector[Vec3f]& ps)
         #
-        # int addSubModel(const vector[Vec3f]& ps, const vector[Triangle]& ts)
+        int addSubModel(const vector[Vec3f]& ps, const vector[Triangle]& ts)
 
         int endModel()
 

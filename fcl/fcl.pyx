@@ -81,7 +81,9 @@ cdef class CollisionObject:
     cdef defs.PyObject *geom
     cdef bool _no_instance
 
-    def __cinit__(self, CollisionGeometry geom=CollisionGeometry(), Transform tf=None, _no_instance=False):
+    def __cinit__(self, CollisionGeometry geom=None, Transform tf=None, _no_instance=False):
+        if geom is None:
+            geom = CollisionGeometry()
         defs.Py_INCREF(<defs.PyObject*> geom)
         self.geom = <defs.PyObject*> geom
         self._no_instance = _no_instance
@@ -443,7 +445,7 @@ cdef class DynamicAABBTreeCollisionManager:
             self.thisptr.collide(<void*> fn, CollisionCallBack)
         elif len(args) == 3 and isinstance(args[0], DynamicAABBTreeCollisionManager):
             fn = CollisionFunction(args[2], args[1])
-            self.thisptr.collide((<CollisionObject?> args[0]).thisptr, <void*> fn, CollisionCallBack)
+            self.thisptr.collide((<DynamicAABBTreeCollisionManager?> args[0]).thisptr, <void*> fn, CollisionCallBack)
         elif len(args) == 3 and inspect.isroutine(args[2]):
             fn = CollisionFunction(args[2], args[1])
             self.thisptr.collide((<CollisionObject?> args[0]).thisptr, <void*> fn, CollisionCallBack)
@@ -456,7 +458,7 @@ cdef class DynamicAABBTreeCollisionManager:
             self.thisptr.distance(<void*> fn, DistanceCallBack)
         elif len(args) == 3 and isinstance(args[0], DynamicAABBTreeCollisionManager):
             fn = DistanceFunction(args[2], args[1])
-            self.thisptr.distance((<CollisionObject?> args[0]).thisptr, <void*> fn, DistanceCallBack)
+            self.thisptr.distance((<DynamicAABBTreeCollisionManager?> args[0]).thisptr, <void*> fn, DistanceCallBack)
         elif len(args) == 3 and inspect.isroutine(args[2]):
             fn = DistanceFunction(args[2], args[1])
             self.thisptr.distance((<CollisionObject?> args[0]).thisptr, <void*> fn, DistanceCallBack)
@@ -519,8 +521,12 @@ cdef class DynamicAABBTreeCollisionManager:
 ###############################################################################
 
 def collide(CollisionObject o1, CollisionObject o2,
-            request=CollisionRequest(),
-            result=CollisionResult()):
+            request=None, result=None):
+
+    if request is None:
+        request = CollisionRequest()
+    if result is None:
+        result = CollisionResult()
 
     cdef defs.CollisionResult cresult
 
@@ -551,8 +557,12 @@ def collide(CollisionObject o1, CollisionObject o2,
 
 def continuousCollide(CollisionObject o1, Transform tf1_end,
                       CollisionObject o2, Transform tf2_end,
-                      request = ContinuousCollisionRequest(),
-                      result = ContinuousCollisionResult()):
+                      request = None, result = None):
+
+    if request is None:
+        request = ContinuousCollisionRequest()
+    if result is None:
+        result = ContinuousCollisionResult()
 
     cdef defs.ContinuousCollisionResult cresult
 
@@ -573,8 +583,12 @@ def continuousCollide(CollisionObject o1, Transform tf1_end,
     return ret
 
 def distance(CollisionObject o1, CollisionObject o2,
-             request = DistanceRequest(),
-             result = DistanceResult()):
+             request = None, result=None):
+
+    if request is None:
+        request = DistanceRequest()
+    if result is None:
+        result = DistanceResult()
 
     cdef defs.DistanceResult cresult
 

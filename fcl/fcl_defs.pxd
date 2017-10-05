@@ -254,6 +254,8 @@ cdef extern from "fcl/broadphase/broadphase_dynamic_AABB_tree.h" namespace "fcl"
         void registerObjects(vector[CollisionObject*]& other_objs)
         void registerObject(CollisionObject* obj)
         void unregisterObject(CollisionObject* obj)
+        void collide(DynamicAABBTreeCollisionManager* mgr, void* cdata, CollisionCallBack callback)
+        void distance(DynamicAABBTreeCollisionManager* mgr, void* cdata, DistanceCallBack callback)
         void collide(CollisionObject* obj, void* cdata, CollisionCallBack callback)
         void distance(CollisionObject* obj, void* cdata, DistanceCallBack callback)
         void collide(void* cdata, CollisionCallBack callback)

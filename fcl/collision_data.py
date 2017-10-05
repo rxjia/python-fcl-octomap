@@ -96,13 +96,21 @@ class DistanceResult:
         self.b2 = -1
 
 class CollisionData:
-    def __init__(self, request=CollisionRequest(), result=CollisionResult()):
+    def __init__(self, request=None, result=None):
+        if request is None:
+            request = CollisionRequest()
+        if result is None:
+            result = CollisionResult()
         self.request = request
         self.result = result
         self.done = False
 
 class DistanceData:
-    def __init__(self, request=DistanceRequest(), result=DistanceResult()):
+    def __init__(self, request=None, result=None):
+        if request is None:
+            request = DistanceRequest()
+        if result is None:
+            result = DistanceResult()
         self.request = request
         self.result = result
         self.done = False

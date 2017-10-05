@@ -180,6 +180,7 @@ ret = fcl.distance(o1, o2, request, result)
 
 After calling `fcl.distance()`, `ret` contains the minimum distance between the two objects
 and `result` contains information about the closest points on the objects.
+If `ret` is negative, the objects are in collision.
 For more information about available parameters for distance requests and results,
 see `fcl/collision_data.py`.
 
@@ -208,48 +209,65 @@ For more information about available parameters for continuous collision request
 see `fcl/collision_data.py`.
 
 ### Broadphase Checking
-In addition to pairwise checks, FCL supports broadphase collision/distance between groups of objects and can avoid the n square complexity.
+In addition to pairwise checks, FCL supports broadphase collision/distance between groups of objects and can avoid n-squared complexity.
+Specifically, `CollisionObject` items are registered with a `DynamicAABBTreeCollisionManager` before collision or distance checking is performed.
 
+Three types of checks are possible:
+* One-to-many: Collision/distance checking between a stand-alone `CollisionObject` and all objects managed by a manager.
+* Internal many-to-many: Pairwise collision/distance checking between all pairs of objects managed by a manager.
+* Group many-to-many: Pairwise collision/distance checking between items from two managers.
 
-For collision, the broadphase algorithm can return all collision pairs. For distance, it can return the pair with the minimum distance. FCL uses a CollisionManager structure to manage all the objects involving the collision or distance operations.
+In general, the collision methods can return all contact pairs, while the distance methods will just return the single closest distance between any pair of objects.
+Here are some examples of managed collision checking.
+The methods take a callback function -- use the defaults from `python-fcl` unless you have a special use case -- and a wrapper object, either `CollisionData` or `DistanceData`, that wraps a request-response pair. This object also has a field, `done`, that tells the recursive collision checker when to quit.
+Be sure to use a new `Data` object for each request or set the `done` attribute to `False` before reusing one.
 
-```cpp
-// Initialize the collision manager for the first group of objects. 
-// FCL provides various different implementations of CollisionManager.
-// Generally, the DynamicAABBTreeCollisionManager would provide the best performance.
-BroadPhaseCollisionManager* manager1 = new DynamicAABBTreeCollisionManager(); 
-// Initialize the collision manager for the second group of objects.
-BroadPhaseCollisionManager* manager2 = new DynamicAABBTreeCollisionManager();
-// To add objects into the collision manager, using BroadPhaseCollisionManager::registerObject() function to add one object
-std::vector<CollisionObject*> objects1 = ...
-for(std::size_t i = 0; i < objects1.size(); ++i)
-manager1->registerObject(objects1[i]);
-// Another choose is to use BroadPhaseCollisionManager::registerObjects() function to add a set of objects
-std::vector<CollisionObject*> objects2 = ...
-manager2->registerObjects(objects2);
-// In order to collect the information during broadphase, CollisionManager requires two settings: 
-// a) a callback to collision or distance; 
-// b) an intermediate data to store the information generated during the broadphase computation
-// For a), FCL provides the default callbacks for both collision and distance.
-// For b), FCL uses the CollisionData structure for collision and DistanceData structure for distance. CollisionData/DistanceData is just a container including both the CollisionRequest/DistanceRequest and CollisionResult/DistanceResult structures mentioned above.
-CollisionData collision_data;
-DistanceData distance_data;
-// Setup the managers, which is related with initializing the broadphase acceleration structure according to objects input
-manager1->setup();
-manager2->setup();
-// Examples for various queries
-// 1. Collision query between two object groups and get collision numbers
-manager2->collide(manager1, &collision_data, defaultCollisionFunction);
-int n_contact_num = collision_data.result.numContacts(); 
-// 2. Distance query between two object groups and get the minimum distance
-manager2->distance(manager1, &distance_data, defaultDistanceFunction);
-double min_distance = distance_data.result.min_distance;
-// 3. Self collision query for group 1
-manager1->collide(&collision_data, defaultCollisionFunction);
-// 4. Self distance query for group 1
-manager1->distance(&distance_data, defaultDistanceFunction);
-// 5. Collision query between one object in group 1 and the entire group 2
-manager2->collide(objects1[0], &collision_data, defaultCollisionFunction);
-// 6. Distance query between one object in group 1 and the entire group 2
-manager2->distance(objects1[0], &distance_data, defaultDistanceFunction); 
+```python
+objs1 = [fcl.CollisionObject(box), fcl.CollisionObject(sphere)]
+objs2 = [fcl.CollisionObject(cone), fcl.CollisionObject(mesh)]
+
+manager1 = fcl.DynamicAABBTreeCollisionManager()
+manager2 = fcl.DynamicAABBTreeCollisionManager()
+
+manager1.registerObjects(objs1)
+manager2.registerObjects(objs2)
+
+manager1.setup()
+manager2.setup()
+
+#=====================================================================
+# Managed internal (n^2) collision checking
+#=====================================================================
+cdata = fcl.CollisionData()
+manager1.collide(cdata, fcl.defaultCollisionCallback)
+print 'Collision within manager 1?: {}'.format(cdata.result.is_collision)
+
+##=====================================================================
+## Managed internal (n^2) distance checking
+##=====================================================================
+ddata = fcl.DistanceData()
+manager1.distance(ddata, fcl.defaultDistanceCallback)
+print 'Closest distance within manager 1?: {}'.format(ddata.result.min_distance)
+
+#=====================================================================
+# Managed one to many collision checking
+#=====================================================================
+req = fcl.CollisionRequest(num_max_contacts=100, enable_contact=True)
+rdata = fcl.CollisionData(request = req)
+
+manager1.collide(fcl.CollisionObject(mesh), rdata, fcl.defaultCollisionCallback)
+print 'Collision between manager 1 and Mesh?: {}'.format(rdata.result.is_collision)
+print 'Contacts:'
+for c in rdata.result.contacts:
+    print '\tO1: {}, O2: {}'.format(c.o1, c.o2)
+
+#=====================================================================
+# Managed many to many collision checking
+#=====================================================================
+rdata = fcl.CollisionData(request = req)
+manager1.collide(manager2, rdata, fcl.defaultCollisionCallback)
+print 'Collision between manager 1 and manager 2?: {}'.format(rdata.result.is_collision)
+print 'Contacts:'
+for c in rdata.result.contacts:
+    print '\tO1: {}, O2: {}'.format(c.o1, c.o2)
 ```

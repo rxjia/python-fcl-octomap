@@ -1,7 +1,8 @@
 import os
 import sys
 from setuptools import Extension, setup
-from Cython.Distutils import build_ext
+
+version = '0.0.1'
 
 platform_supported = False
 for prefix in ['darwin', 'linux', 'bsd']:
@@ -28,10 +29,33 @@ if not platform_supported:
     raise NotImplementedError(sys.platform)
 
 setup(
-    name="fcl",
-    version="0.1",
+    name='python-fcl',
+    version=version,
+    description='Python bindings for the Flexible Collision Library',
+    long_description='Python bindings for the Flexible Collision Library',
+    url='https://github.com/BerkeleyAutomation/python-fcl',
+    author='Matthew Matl',
+    author_email='mmatl@eecs.berkeley.edu',
     license = "BSD",
-    packages=["fcl"],
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.0',
+        'Programming Language :: Python :: 3.1',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+    ],
+    keywords='fcl collision distance',
+    packages=['fcl'],
+    setup_requires=['cython'],
+    install_requires=['numpy', 'cython'],
     ext_modules=[Extension(
         "fcl.fcl",
         ["fcl/fcl.pyx"],
@@ -41,8 +65,6 @@ setup(
                 "fcl"
                 ],
         language="c++",
-        #for clang, add: , "-Xclang", "-fcolor-diagnostics"
         extra_compile_args = ["-std=c++11"]
-    )],
-    cmdclass={'build_ext': build_ext},
-    )
+    )]
+)

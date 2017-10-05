@@ -1,6 +1,29 @@
 import numpy as np
 import fcl
 
+def print_collision_result(o1_name, o2_name, result):
+    print 'Collision between {} and {}:'.format(o1_name, o2_name)
+    print '-'*30
+    print 'Collision?: {}'.format(result.is_collision)
+    print 'Number of contacts: {}'.format(len(result.contacts))
+    print ''
+
+def print_continuous_collision_result(o1_name, o2_name, result):
+    print 'Continuous collision between {} and {}:'.format(o1_name, o2_name)
+    print '-'*30
+    print 'Collision?: {}'.format(result.is_collide)
+    print 'Time of collision: {}'.format(result.time_of_contact)
+    print ''
+
+def print_distance_result(o1_name, o2_name, result):
+    print 'Distance between {} and {}:'.format(o1_name, o2_name)
+    print '-'*30
+    print 'Distance: {}'.format(result.min_distance)
+    print 'Closest Points:'
+    print result.nearest_points[0]
+    print result.nearest_points[1]
+    print ''
+
 # Create simple geometries
 box = fcl.Box(1.0, 2.0, 3.0)
 sphere = fcl.Sphere(4.0)
@@ -17,49 +40,104 @@ tris  = np.array([[0,2,1],
                   [1,2,3]])
 
 # Create mesh geometry
-m = fcl.BVHModel()
-m.beginModel(len(verts), len(tris))
-m.addSubModel(verts, tris)
-m.endModel()
+mesh = fcl.BVHModel()
+mesh.beginModel(len(verts), len(tris))
+mesh.addSubModel(verts, tris)
+mesh.endModel()
 
-# Single object collision checking
+#=====================================================================
+# Pairwise collision checking
+#=====================================================================
+print '='*60
+print 'Testing Pairwise Collision Checking'
+print '='*60
+print ''
+
 req = fcl.CollisionRequest(enable_contact=True)
 res = fcl.CollisionResult()
+
 n_contacts = fcl.collide(fcl.CollisionObject(box, fcl.Transform()),
                          fcl.CollisionObject(cone, fcl.Transform()),
                          req, res)
+print_collision_result('Box', 'Cone', res)
 
-print 'Collision between Box and Cone:'
-print '-'*30
-print 'Collision?: {}'.format(res.is_collision)
-print 'Number of contacts: {}'.format(n_contacts)
-print ''
-
-req = fcl.CollisionRequest(enable_contact=True)
-res = fcl.CollisionResult()
 n_contacts = fcl.collide(fcl.CollisionObject(box, fcl.Transform()),
                          fcl.CollisionObject(cyl, fcl.Transform(np.array([6.0,0.0,0.0]))),
                          req, res)
+print_collision_result('Box', 'Cylinder', res)
 
-print 'Collision between Box and Cylinder:'
-print '-'*30
-print 'Collision?: {}'.format(res.is_collision)
-print 'Number of contacts: {}'.format(n_contacts)
-print ''
-
-req = fcl.CollisionRequest(enable_contact=True)
-res = fcl.CollisionResult()
-n_contacts = fcl.collide(fcl.CollisionObject(m, fcl.Transform(np.array([0.0,0.0,-1.0]))),
+n_contacts = fcl.collide(fcl.CollisionObject(mesh, fcl.Transform(np.array([0.0,0.0,-1.0]))),
                          fcl.CollisionObject(cyl, fcl.Transform()),
                          req, res)
+print_collision_result('Box', 'Mesh', res)
 
-print 'Collision between Mesh and Cylinder:'
-print '-'*30
-print 'Collision?: {}'.format(res.is_collision)
-print 'Number of contacts: {}'.format(n_contacts)
+#=====================================================================
+# Pairwise distance compuatation
+#=====================================================================
+print '='*60
+print 'Testing Pairwise Distance Checking'
+print '='*60
 print ''
 
+req = fcl.DistanceRequest(enable_nearest_points=True)
+res = fcl.DistanceResult()
 
+dist = fcl.distance(fcl.CollisionObject(box, fcl.Transform()),
+                    fcl.CollisionObject(cone, fcl.Transform()),
+                    req, res)
+print_distance_result('Box', 'Cone', res)
+
+dist = fcl.distance(fcl.CollisionObject(box, fcl.Transform()),
+                    fcl.CollisionObject(cyl, fcl.Transform(np.array([6.0,0.0,0.0]))),
+                    req, res)
+print_distance_result('Box', 'Cylinder', res)
+
+dist = fcl.distance(fcl.CollisionObject(box, fcl.Transform()),
+                    fcl.CollisionObject(box, fcl.Transform(np.array([1.01,0.0,0.0]))),
+                    req, res)
+print_distance_result('Box', 'Box', res)
+
+#=====================================================================
+# Pairwise continuous collision checking
+#=====================================================================
+print '='*60
+print 'Testing Pairwise Continuous Collision Checking'
+print '='*60
+print ''
+
+req = fcl.ContinuousCollisionRequest()
+res = fcl.ContinuousCollisionResult()
+
+dist = fcl.continuousCollide(fcl.CollisionObject(box, fcl.Transform(np.array([20.0, 0.0, 0.0]))),
+                             fcl.Transform(),
+                             fcl.CollisionObject(cyl, fcl.Transform()),
+                             fcl.Transform(np.array([3.0, 0.0, 0.0])),
+                             req, res)
+print_continuous_collision_result('Box', 'Cylinder', res)
+
+#=====================================================================
+# Managed one-to-many collision checking
+#=====================================================================
+print '='*60
+print 'Testing Managed Collision Checking'
+print '='*60
+print ''
+objs1 = [fcl.CollisionObject(box, fcl.Transform(np.array([20,0,0]))), fcl.CollisionObject(sphere)]
+objs2 = [fcl.CollisionObject(cone), fcl.CollisionObject(mesh)]
+
+manager1 = fcl.DynamicAABBTreeCollisionManager()
+manager2 = fcl.DynamicAABBTreeCollisionManager()
+
+manager1.registerObjects(objs1)
+manager2.registerObjects(objs2)
+
+cdata = fcl.CollisionData()
+manager1.collide(cdata, fcl.defaultCollisionCallback)
+print cdata.result.is_collision
+
+cdata = fcl.DistanceData()
+manager1.distance(cdata, fcl.defaultDistanceCallback)
+print cdata.result.min_distance
 #objs = [fcl.CollisionObject(box),
 #        fcl.CollisionObject(sphere),
 #        fcl.CollisionObject(cone)]

@@ -438,26 +438,26 @@ cdef class DynamicAABBTreeCollisionManager:
         return list(self.objs)
 
     def collide(self, *args):
-        if len(args) == 2 and inspect.isfunction(args[1]):
+        if len(args) == 2 and inspect.isroutine(args[1]):
             fn = CollisionFunction(args[1], args[0])
             self.thisptr.collide(<void*> fn, CollisionCallBack)
         elif len(args) == 3 and isinstance(args[0], DynamicAABBTreeCollisionManager):
             fn = CollisionFunction(args[2], args[1])
             self.thisptr.collide((<CollisionObject?> args[0]).thisptr, <void*> fn, CollisionCallBack)
-        elif len(args) == 3 and inspect.isfunction(args[2]):
+        elif len(args) == 3 and inspect.isroutine(args[2]):
             fn = CollisionFunction(args[2], args[1])
             self.thisptr.collide((<CollisionObject?> args[0]).thisptr, <void*> fn, CollisionCallBack)
         else:
             raise ValueError
 
     def distance(self, *args):
-        if len(args) == 2 and inspect.isfunction(args[1]):
+        if len(args) == 2 and inspect.isroutine(args[1]):
             fn = DistanceFunction(args[1], args[0])
             self.thisptr.distance(<void*> fn, DistanceCallBack)
         elif len(args) == 3 and isinstance(args[0], DynamicAABBTreeCollisionManager):
             fn = DistanceFunction(args[2], args[1])
             self.thisptr.distance((<CollisionObject?> args[0]).thisptr, <void*> fn, DistanceCallBack)
-        elif len(args) == 3 and inspect.isfunction(args[2]):
+        elif len(args) == 3 and inspect.isroutine(args[2]):
             fn = DistanceFunction(args[2], args[1])
             self.thisptr.distance((<CollisionObject?> args[0]).thisptr, <void*> fn, DistanceCallBack)
         else:
@@ -597,6 +597,36 @@ def distance(CollisionObject o1, CollisionObject o2,
 ###############################################################################
 # Collision and Distance Callback Functions
 ###############################################################################
+
+def defaultCollisionCallback(CollisionObject o1, CollisionObject o2, cdata):
+    request = cdata.request
+    result = cdata.result
+
+    if cdata.done:
+        return True
+
+    collide(o1, o2, request, result)
+
+    if (not request.enable_cost and result.is_collision and len(result.contacts) > request.num_max_contacts):
+        cdata.done = True
+
+    return cdata.done
+
+def defaultDistanceCallback(CollisionObject o1, CollisionObject o2, cdata):
+    request = cdata.request
+    result = cdata.result
+
+    if cdata.done:
+        return True, result.min_distance
+
+    distance(o1, o2, request, result)
+
+    dist = result.min_distance
+
+    if dist <= 0:
+        return True, dist
+
+    return cdata.done, dist
 
 cdef class CollisionFunction:
     cdef:

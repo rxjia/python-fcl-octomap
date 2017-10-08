@@ -11,6 +11,7 @@ for prefix in ['darwin', 'linux', 'bsd']:
         include_dirs = [
             '/usr/include',
             '/usr/local/include',
+            '/usr/include/eigen3'
         ]
         lib_dirs = [
             '/usr/lib',

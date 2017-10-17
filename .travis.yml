@@ -12,6 +12,7 @@ matrix:
       services:
         - docker
     - os: osx
+      language: python
 
 install:
   # Python 3 is needed to run cibuildwheel 

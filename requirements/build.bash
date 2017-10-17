@@ -3,11 +3,11 @@ cd $(dirname $(realpath $0))
 
 cd libccd/src
 make -j4
-sudo make install
+make install
 
 cd ../..
 
 cd fcl
 cmake .
 make -j4
-sudo make install
+make install

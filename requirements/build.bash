@@ -8,13 +8,6 @@ make install
 cd ../..
 
 cd fcl
-
-# check if cmake is called cmake3 *sigh*
-if hash cmake3 2>/dev/null; then
-    cmake3 .
-else
-    cmake .
-fi
-
+cmake .
 make -j4
 make install

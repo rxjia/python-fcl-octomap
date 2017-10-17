@@ -1,7 +1,7 @@
 
 env:
   global:
-    - CIBW_BEFORE_BUILD="bash requirements/clone.bash && bash requirements/build.bash"
+    - CIBW_BEFORE_BUILD="yum install cmake eigen3 && bash requirements/clone.bash && bash requirements/build.bash"
     
 matrix:
   include:

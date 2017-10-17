@@ -17,16 +17,16 @@ cdef extern from "Python.h":
 #        shared_ptr(T*) except +
 #        T* get()
 
-cdef extern from "fcl/common/types.h" namespace "fcl":
+cdef extern from "fcl/data_types.h" namespace "fcl":
     ctypedef double FCL_REAL
 
-cdef extern from "fcl/common/types.h" namespace "fcl":
+cdef extern from "fcl/math/vec_3f.h" namespace "fcl":
     cdef cppclass Vec3f:
         Vec3f() except +
         Vec3f(FCL_REAL x, FCL_REAL y, FCL_REAL z) except +
         FCL_REAL& operator[](size_t i)
 
-cdef extern from "fcl/common/types.h" namespace "fcl":
+cdef extern from "fcl/math/matrix_3f.h" namespace "fcl":
     cdef cppclass Matrix3f:
         Matrix3f() except +
         Matrix3f(FCL_REAL xx, FCL_REAL xy, FCL_REAL xz,
@@ -34,7 +34,7 @@ cdef extern from "fcl/common/types.h" namespace "fcl":
                  FCL_REAL zx, FCL_REAL zy, FCL_REAL zz) except +
         FCL_REAL operator()(size_t i, size_t j)
 
-cdef extern from "fcl/common/types.h" namespace "fcl":
+cdef extern from "fcl/math/transform.h" namespace "fcl":
     cdef cppclass Quaternion3f:
         Quaternion3f() except +
         Quaternion3f(FCL_REAL a, FCL_REAL b,
@@ -61,7 +61,7 @@ cdef extern from "fcl/common/types.h" namespace "fcl":
         void setTranslation(Vec3f& T_)
         void setQuatRotation(Quaternion3f & q_)
 
-cdef extern from "fcl/narrowphase/continuous_collision_request.h" namespace "fcl":
+cdef extern from "fcl/collision_data.h" namespace "fcl":
 
     cdef enum CCDMotionType:
         CCDM_TRANS, CCDM_LINEAR, CCDM_SCREW, CCDM_SPLINE
@@ -146,7 +146,7 @@ cdef extern from "fcl/narrowphase/continuous_collision_request.h" namespace "fcl
         GJKSolverType gjk_solver_type
         DistanceRequest(bool enable_nearest_points_, GJKSolverType gjk_solver_type_) except +
 
-cdef extern from "fcl/geometry/collision_geometry.h" namespace "fcl":
+cdef extern from "fcl/collision_object.h" namespace "fcl":
     cdef enum OBJECT_TYPE:
         OT_UNKNOWN, OT_BVH, OT_GEOM, OT_OCTREE, OT_COUNT
     cdef enum NODE_TYPE:
@@ -191,7 +191,7 @@ cdef extern from "fcl/geometry/collision_geometry.h" namespace "fcl":
     ctypedef CollisionGeometry const_CollisionGeometry "const fcl::CollisionGeometry"
     ctypedef CollisionObject const_CollisionObject "const fcl::CollisionObject"
 
-cdef extern from "fcl/geometry/geometric_shape_to_BVH_model.h" namespace "fcl":
+cdef extern from "fcl/shape/geometric_shapes.h" namespace "fcl":
     cdef cppclass ShapeBase(CollisionGeometry):
         ShapeBase() except +
 
@@ -244,7 +244,7 @@ cdef extern from "fcl/geometry/geometric_shape_to_BVH_model.h" namespace "fcl":
         Vec3f n
         FCL_REAL d
 
-cdef extern from "fcl/broadphase/broadphase_dynamic_AABB_tree.h" namespace "fcl":
+cdef extern from "fcl/broadphase/broadphase.h" namespace "fcl":
     ctypedef bool (*CollisionCallBack)(CollisionObject* o1, CollisionObject* o2, void* cdata)
     ctypedef bool (*DistanceCallBack)(CollisionObject* o1, CollisionObject* o2, void* cdata, FCL_REAL& dist)
 
@@ -275,7 +275,7 @@ cdef extern from "fcl/broadphase/broadphase_dynamic_AABB_tree.h" namespace "fcl"
         bool octree_as_geometry_collide
         bool octree_as_geometry_distance
 
-cdef extern from "fcl/narrowphase/continuous_collision.h" namespace "fcl":
+cdef extern from "fcl/collision.h" namespace "fcl":
     size_t collide(CollisionObject* o1, CollisionObject* o2,
                    CollisionRequest& request,
                    CollisionResult& result)
@@ -285,7 +285,7 @@ cdef extern from "fcl/narrowphase/continuous_collision.h" namespace "fcl":
                    CollisionRequest& request,
                    CollisionResult& result)
 
-cdef extern from "fcl/narrowphase/continuous_collision.h" namespace "fcl":
+cdef extern from "fcl/continuous_collision.h" namespace "fcl":
     FCL_REAL continuousCollide(CollisionGeometry* o1, Transform3f& tf1_beg, Transform3f& tf1_end,
                                CollisionGeometry* o2, Transform3f& tf2_beg, Transform3f& tf2_end,
                                ContinuousCollisionRequest& request,
@@ -297,20 +297,20 @@ cdef extern from "fcl/narrowphase/continuous_collision.h" namespace "fcl":
                                ContinuousCollisionResult& result)
 
 
-cdef extern from "fcl/narrowphase/distance.h" namespace "fcl":
+cdef extern from "fcl/distance.h" namespace "fcl":
     FCL_REAL distance(CollisionObject* o1, CollisionObject* o2,
                       DistanceRequest& request, DistanceResult& result)
     FCL_REAL distance(CollisionGeometry* o1, Transform3f& tf1,
                       CollisionGeometry* o2, Transform3f& tf2,
                       DistanceRequest& request, DistanceResult& result)
 
-cdef extern from "fcl/geometry/bvh/BVH_internal.h" namespace "fcl":
+cdef extern from "fcl/BVH/BVH_internal.h" namespace "fcl":
     cdef enum BVHModelType:
         BVH_MODEL_UNKNOWN,   # unknown model type
         BVH_MODEL_TRIANGLES, # triangle model
         BVH_MODEL_POINTCLOUD # point cloud model
 
-cdef extern from "fcl/geometry/bvh/BVH_internal.h" namespace "fcl":
+cdef extern from "fcl/BVH/BVH_internal.h" namespace "fcl":
     cdef enum  BVHReturnCode:
         BVH_OK = 0,                              # BVH is valid
         BVH_ERR_MODEL_OUT_OF_MEMORY = -1,        # Cannot allocate memory for vertices and triangles
@@ -323,7 +323,7 @@ cdef extern from "fcl/geometry/bvh/BVH_internal.h" namespace "fcl":
         BVH_ERR_UNKNOWN = -8                     # Unknown failure
 
 
-cdef extern from "fcl/geometry/bvh/BVH_internal.h" namespace "fcl":
+cdef extern from "fcl/BVH/BVH_internal.h" namespace "fcl":
     cdef enum BVHBuildState:
         BVH_BUILD_STATE_EMPTY,         # empty state, immediately after constructor
         BVH_BUILD_STATE_BEGUN,         # after beginModel(), state for adding geometry primitives
@@ -332,21 +332,21 @@ cdef extern from "fcl/geometry/bvh/BVH_internal.h" namespace "fcl":
         BVH_BUILD_STATE_UPDATED,       # after tree has been build for updated geometry, ready for ccd use
         BVH_BUILD_STATE_REPLACE_BEGUN, # after beginReplaceModel(), state for replacing geometry primitives
 
-cdef extern from "fcl/common/types.h" namespace "fcl":
+cdef extern from "fcl/data_types.h" namespace "fcl":
     cdef cppclass Triangle:
         Triangle() except +
         Triangle(size_t p1, size_t p2, size_t p3) except +
         size_t vids[3]
 
-cdef extern from "fcl/geometry/bvh/detail/BV_splitter.h" namespace "fcl":
+cdef extern from "fcl/BVH/BV_splitter.h" namespace "fcl":
     cdef cppclass BVSplitterBase:
         pass
 
-cdef extern from "fcl/geometry/bvh/detail/BV_fitter.h" namespace "fcl":
+cdef extern from "fcl/BVH/BV_fitter.h" namespace "fcl":
     cdef cppclass BVFitterBase:
         pass
 
-cdef extern from "fcl/geometry/bvh/BVH_model.h" namespace "fcl":
+cdef extern from "fcl/BVH/BVH_model.h" namespace "fcl":
     # Cython only accepts type template parameters.
     # see https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs
     cdef cppclass BVHModel "fcl::BVHModel<fcl::OBBRSS>" ( CollisionGeometry ):

@@ -1,0 +1,13 @@
+matrix:
+  include:
+    - sudo: required
+      services:
+        - docker
+    - os: osx
+
+env:
+  - CIBW_BEFORE_BUILD="bash requirements/clone.bash && sudo bash requirements/build.bash"
+
+script:
+  - pip install cibuildwheel==0.6.0
+  - cibuildwheel --output-dir wheelhouse

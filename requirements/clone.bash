@@ -1,6 +1,3 @@
-# change directory to script location
-cd $(dirname $(realpath $0))
-
 git clone https://github.com/danfis/libccd.git
 cd libccd
 git pull

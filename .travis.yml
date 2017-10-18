@@ -1,8 +1,7 @@
 
 env:
   global:
-    - CIBW_BEFORE_BUILD="yum install -y cmake28 eigen &&\
-                         ls /usr/bin &&\
+    - CIBW_BEFORE_BUILD="yum install -y cmake28 eigen3 &&\
                          bash requirements/clone.bash &&\
                          bash requirements/build.bash"
     

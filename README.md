@@ -1,5 +1,5 @@
 ## python-fcl 
-#### Python Interface for the Flexible Collision Library 
+### Python Interface for the Flexible Collision Library 
 
 Python-FCL is an (unofficial) Python interface for the [Flexible Collision Library (FCL)](https://github.com/flexible-collision-library/fcl),
 an excellent C++ library for performing proximity and collision queries on pairs of geometric models.

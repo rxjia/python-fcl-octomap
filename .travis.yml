@@ -1,8 +1,7 @@
 
 env:
   global:
-    - CIBW_BEFORE_BUILD="yum install -y cmake3 eigen3 &&\
-                         ln -s /usr/bin/cmake3 /usr/bin/cmake &&\
+    - CIBW_BEFORE_BUILD="yum install -y cmake28 eigen &&\
                          ls /usr/bin &&\
                          bash requirements/clone.bash &&\
                          bash requirements/build.bash"
@@ -17,6 +16,7 @@ matrix:
         - docker
     - os: osx
       language: python
+      python: "3.6"
 
 install:
   # Python 3 is needed to run cibuildwheel 

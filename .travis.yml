@@ -1,7 +1,7 @@
 
 env:
   global:
-    - CIBW_BEFORE_BUILD="cd requirements && export PATH=`pwd`/bin:$PATH && bash install_cmake.bash && bash clone.bash && bash build.bash"
+    - CIBW_BEFORE_BUILD="export PATH=`pwd`requirements/bin:$PATH && cd requirements && bash install_cmake.bash && bash clone.bash && bash build.bash"
     
 matrix:
   include:

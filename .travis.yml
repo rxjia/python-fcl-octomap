@@ -1,7 +1,7 @@
 
 env:
   global:
-    - CIBW_BEFORE_BUILD="yum install -y cmake28 && cd requirements && bash clone.bash && bash build.bash"
+    - CIBW_BEFORE_BUILD="cd requirements && bash install_cmake.bash && bash clone.bash && bash build.bash"
     
 matrix:
   include:

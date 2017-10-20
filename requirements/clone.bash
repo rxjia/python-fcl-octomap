@@ -9,7 +9,7 @@ cd fcl
 git pull
 git checkout 22f375f333beccc10c527974cef96784f0841649
 # very unfortunate
-sed -i -- 's/2.8.12/2.8.11/g' fcl/CMakeLists.txt
+#sed -i -- 's/2.8.12/2.8.11/g' fcl/CMakeLists.txt
 
 
 # get eigen

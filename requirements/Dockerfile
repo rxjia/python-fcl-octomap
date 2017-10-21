@@ -1,4 +1,5 @@
-# NOTE: this docker file is 
+# NOTE: this docker file is only for local testing of the build
+# it should be copied up to the repo root and ran there
 
 FROM quay.io/pypa/manylinux1_x86_64:latest
 

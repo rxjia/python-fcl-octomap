@@ -1,5 +1,7 @@
 import unittest
 import fcl
+import sys
+
 import numpy as np
 
 class TestFCL(unittest.TestCase):
@@ -127,6 +129,7 @@ class TestFCL(unittest.TestCase):
         ret = fcl.continuousCollide(box, fcl.Transform(),
                                     cone, fcl.Transform(),
                                     request, result)
+        
         if sys.version_info.major >= 3:
             ## WHY DOES THIS FAIL IN PYTHON 2?
             self.assertTrue(result.is_collide)

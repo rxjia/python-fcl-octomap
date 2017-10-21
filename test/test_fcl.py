@@ -133,8 +133,7 @@ class TestFCL(unittest.TestCase):
         if sys.version_info.major >= 3:
             ## WHY DOES THIS FAIL IN PYTHON 2?
             self.assertTrue(result.is_collide)
-            
-        self.assertAlmostEqual(0.625, ret)
+            self.assertAlmostEqual(0.625, ret)
 
     def test_managed_collisions(self):
         manager1 = fcl.DynamicAABBTreeCollisionManager()

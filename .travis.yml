@@ -2,8 +2,8 @@
 env:
   global:
     - CIBW_BEFORE_BUILD="yum install -y gcc && pip install numpy cython && cd requirements && bash install_cmake.bash && bash clone.bash && bash build.bash"
-    #- CIBW_TEST_REQUIRES="nose2"
-    #- CIBW_TEST_COMMAND="cd {project}/test && nose2"
+    - CIBW_TEST_REQUIRES="nose2"
+    - CIBW_TEST_COMMAND="cd {project}/test && nose2"
     - CIBW_SKIP="cp33-* cp34-*"
     
 matrix:

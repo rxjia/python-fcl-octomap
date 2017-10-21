@@ -2,7 +2,8 @@ import os
 import sys
 from setuptools import Extension, setup
 
-version = '0.0.1'
+# load __version__
+exec(open('fcl/version.py').read())
 
 platform_supported = False
 for prefix in ['darwin', 'linux', 'bsd']:
@@ -21,6 +22,13 @@ for prefix in ['darwin', 'linux', 'bsd']:
             include_dirs += os.environ['CPATH'].split(':')
         if 'LD_LIBRARY_PATH' in os.environ:
             lib_dirs += os.environ['LD_LIBRARY_PATH'].split(':')
+
+        try:
+            import numpy
+            include_dirs += numpy.get_include()
+        except:
+            pass
+            
         break
 
 if sys.platform == "win32":
@@ -31,7 +39,7 @@ if not platform_supported:
 
 setup(
     name='python-fcl',
-    version=version,
+    version=__version__,
     description='Python bindings for the Flexible Collision Library',
     long_description='Python bindings for the Flexible Collision Library',
     url='https://github.com/BerkeleyAutomation/python-fcl',

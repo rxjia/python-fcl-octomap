@@ -1,5 +1,6 @@
 # NOTE: this docker file is only for local testing of the build
 # it should be copied up to the repo root and ran there
+# or symlinked
 
 FROM quay.io/pypa/manylinux1_x86_64:latest
 
@@ -7,9 +8,6 @@ RUN yum install -y gcc
 
 COPY requirements/install_cmake.bash .
 RUN bash install_cmake.bash
-
-COPY requirements/install_pip.bash .
-RUN bash install_pip.bash
 
 COPY requirements/clone.bash .
 RUN bash clone.bash

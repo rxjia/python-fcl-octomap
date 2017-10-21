@@ -1,7 +1,7 @@
 
 env:
   global:
-    - CIBW_BEFORE_BUILD="yum install -y gcc && pip install numpy && cd requirements && bash install_cmake.bash && bash clone.bash && bash build.bash && export LD_LIBRARY_PATH=`{python} -c \"import numpy; print(numpy.get_include())\"`:$LD_LIBRARY_PATH"
+    - CIBW_BEFORE_BUILD="yum install -y gcc && pip install numpy && cd requirements && bash install_cmake.bash && bash clone.bash && bash build.bash"
     
 matrix:
   include:
@@ -11,9 +11,6 @@ matrix:
       python: "3.6"
       services:
         - docker
-    - os: osx
-      language: python
-      python: "3.6"
 
 install:
   # Python 3 is needed to run cibuildwheel 

@@ -24,14 +24,14 @@ RUN bash clone.bash
 COPY requirements/build.bash .
 RUN bash build.bash
 
-# use python 2.7
 # manylinux includes a bunch of pythons
 # to test with others change this env variable
-ENV PATH=/opt/python/cp27-cp27m/bin:$PATH
+#ENV PATH=/opt/python/cp27-cp27m/bin:$PATH
+ENV PATH=/opt/python/cp36-cp36m/bin:$PATH
 
 # we need numpy to build python-fcl
 # since we set our path we'll be using the right pip
-RUN pip install numpy
+RUN pip install numpy cython
 
 # build the python-fcl module
 COPY . /python_fcl

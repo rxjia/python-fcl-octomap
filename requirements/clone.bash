@@ -13,5 +13,5 @@ git checkout 22f375f333beccc10c527974cef96784f0841649
 
 
 # get eigen
-curl -OL https://github.com/RLovelett/eigen/archive/3.3.4.tar.gz
-tar -zxvf 3.3.4.tar.gz
+#curl -OL https://github.com/RLovelett/eigen/archive/3.3.4.tar.gz
+#tar -zxvf 3.3.4.tar.gz

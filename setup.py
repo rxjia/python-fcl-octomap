@@ -1,5 +1,7 @@
 import os
 import sys
+import collections
+
 from setuptools import Extension, setup
 
 # load __version__
@@ -9,26 +11,24 @@ platform_supported = False
 for prefix in ['darwin', 'linux', 'bsd']:
     if prefix in sys.platform:
         platform_supported = True
-        include_dirs = [
-            '/usr/include',
-            '/usr/local/include',
-            '/usr/include/eigen3'
-        ]
-        lib_dirs = [
-            '/usr/lib',
-            '/usr/local/lib',
-        ]
+        include_dirs = ['/usr/include',
+                        '/usr/local/include',
+                        '/usr/include/eigen3']
+        lib_dirs = ['/usr/lib',
+                    '/usr/local/lib']
+        
         if 'CPATH' in os.environ:
             include_dirs += os.environ['CPATH'].split(':')
         if 'LD_LIBRARY_PATH' in os.environ:
             lib_dirs += os.environ['LD_LIBRARY_PATH'].split(':')
 
         try:
+            # get the numpy include path from numpy
             import numpy
-            include_dirs += numpy.get_include()
+            include_dirs.append(numpy.get_include())
         except:
             pass
-            
+
         break
 
 if sys.platform == "win32":

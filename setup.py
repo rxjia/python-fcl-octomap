@@ -1,12 +1,19 @@
 import os
 import sys
-import collections
+import inspect
 
 from setuptools import Extension, setup
 
-# load __version__
-exec(open('fcl/version.py').read())
 
+# get current directory of file in case someone
+# called setup.py from elsewhere
+cwd = os.path.dirname(os.path.abspath(
+    inspect.getfile(inspect.currentframe())))
+
+# load __version__
+exec(open(os.path.join(cwd,
+                       'fcl/version.py'), 'r').read())
+    
 platform_supported = False
 for prefix in ['darwin', 'linux', 'bsd']:
     if prefix in sys.platform:

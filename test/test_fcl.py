@@ -121,7 +121,8 @@ class TestFCL(unittest.TestCase):
         result = fcl.ContinuousCollisionResult()
 
         box = fcl.CollisionObject(self.geometry['box'])
-        cone = fcl.CollisionObject(self.geometry['cone'], fcl.Transform(np.array([0.0, 0.0, -2.0])))
+        cone = fcl.CollisionObject(self.geometry['cone'],
+                                   fcl.Transform(np.array([0.0, 0.0, -2.0])))
 
         ret = fcl.continuousCollide(box, fcl.Transform(),
                                     cone, fcl.Transform(),
@@ -220,10 +221,10 @@ class TestFCL(unittest.TestCase):
         self.assertTrue(len(manager2.getObjects()) == 2)
         self.assertTrue(len(manager3.getObjects()) == 2)
 
-
         # One-to-many
         o1 = fcl.CollisionObject(self.geometry['box'])
-        o2 = fcl.CollisionObject(self.geometry['cylinder'], fcl.Transform(np.array([0.0, 0.0, -4.6])))
+        o2 = fcl.CollisionObject(self.geometry['cylinder'],
+                                 fcl.Transform(np.array([0.0, 0.0, -4.6])))
 
         cdata = fcl.DistanceData(self.drequest, fcl.DistanceResult())
         manager1.distance(o1, cdata, fcl.defaultDistanceCallback)
@@ -231,8 +232,8 @@ class TestFCL(unittest.TestCase):
 
         cdata = fcl.DistanceData(self.drequest, fcl.DistanceResult())
         manager1.distance(o2, cdata, fcl.defaultDistanceCallback)
-        self.assertAlmostEqual(cdata.result.min_distance, 3.6)
-
+        assert abs(cdata.result.min_distance - 3.6) < 1e-4
+        
         cdata = fcl.DistanceData(self.drequest, fcl.DistanceResult())
         manager2.distance(o1, cdata, fcl.defaultDistanceCallback)
         self.assertAlmostEqual(cdata.result.min_distance, 4.0)

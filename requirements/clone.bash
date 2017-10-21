@@ -1,9 +1,11 @@
+rm -rf libccd
 git clone https://github.com/danfis/libccd.git
 cd libccd
 git pull
 git checkout 64f02f741ac94fccd0fb660a5bffcbe6d01d9939
 cd ..
 
+rm -rf fcl
 git clone https://github.com/flexible-collision-library/fcl.git
 cd fcl
 git pull

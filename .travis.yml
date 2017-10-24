@@ -1,0 +1,27 @@
+
+env:
+  global:
+    - CIBW_BEFORE_BUILD="yum install -y gcc && pip install numpy cython && cd requirements && bash install_cmake.bash && bash clone.bash && bash build.bash"
+    - CIBW_TEST_REQUIRES="nose2"
+    - CIBW_TEST_COMMAND="cd {project}/test && nose2"
+    - CIBW_SKIP="cp33-* cp34-*"
+    
+matrix:
+  include:
+    - dist: trusty
+      sudo: required
+      language: python
+      python: "3.6"
+      services:
+        - docker
+
+install:
+  # Python 3 is needed to run cibuildwheel 
+  - if [ "${TRAVIS_OS_NAME:-}" == "osx" ]; then
+      brew install python3;
+    fi
+# Install cibuildwheel using pip3 to make sure Python 3 is used.
+  - pip3 install cibuildwheel==0.6.0
+
+script:
+  - cibuildwheel --output-dir wheelhouse

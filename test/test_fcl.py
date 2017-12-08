@@ -203,6 +203,28 @@ class TestFCL(unittest.TestCase):
         manager1.collide(manager3, cdata, fcl.defaultCollisionCallback)
         self.assertTrue(cdata.result.is_collision)
 
+    def test_updates(self):
+        manager = fcl.DynamicAABBTreeCollisionManager()
+
+        objs = [fcl.CollisionObject(self.geometry['sphere']),
+                fcl.CollisionObject(self.geometry['sphere'], fcl.Transform(np.array([0.0, 0.0, -5.0])))]
+
+        manager.registerObjects(objs)
+        manager.setup()
+
+        self.assertTrue(len(manager.getObjects()) == 2)
+
+        # Many-to-many, internal
+        cdata = fcl.CollisionData(self.crequest, fcl.CollisionResult())
+        manager.collide(cdata, fcl.defaultCollisionCallback)
+        self.assertFalse(cdata.result.is_collision)
+
+        objs[1].setTranslation(np.array([0.0, 0.0, -0.3]))
+        cdata = fcl.CollisionData(self.crequest, fcl.CollisionResult())
+        manager.update(objs[1])
+        manager.collide(cdata, fcl.defaultCollisionCallback)
+        self.assertTrue(cdata.result.is_collision)
+
     def test_managed_distances(self):
         manager1 = fcl.DynamicAABBTreeCollisionManager()
         manager2 = fcl.DynamicAABBTreeCollisionManager()

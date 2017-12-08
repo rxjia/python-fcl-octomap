@@ -113,18 +113,21 @@ cdef class CollisionObject:
 
     def setTranslation(self, vec):
         self.thisptr.setTranslation(numpy_to_vec3f(vec))
+        self.thisptr.computeAABB()
 
     def getRotation(self):
         return mat3f_to_numpy(self.thisptr.getRotation())
 
     def setRotation(self, mat):
         self.thisptr.setRotation(numpy_to_mat3f(mat))
+        self.thisptr.computeAABB()
 
     def getQuatRotation(self):
         return quaternion3f_to_numpy(self.thisptr.getQuatRotation())
 
     def setQuatRotation(self, q):
         self.thisptr.setQuatRotation(numpy_to_quaternion3f(q))
+        self.thisptr.computeAABB()
 
     def getTransform(self):
         rot = self.getRotation()
@@ -133,6 +136,7 @@ cdef class CollisionObject:
 
     def setTransform(self, tf):
         self.thisptr.setTransform(deref((<Transform> tf).thisptr))
+        self.thisptr.computeAABB()
 
     def isOccupied(self):
         return self.thisptr.isOccupied()

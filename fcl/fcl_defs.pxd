@@ -183,6 +183,7 @@ cdef extern from "fcl/collision_object.h" namespace "fcl":
         void setTransform(Matrix3f& q, Vec3f& T)
         void setTransform(Transform3f& tf)
         void setUserData(void *data)
+        void computeAABB()
         void *getUserData()
         bool isOccupied()
         bool isFree()

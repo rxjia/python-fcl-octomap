@@ -48,24 +48,29 @@ class TestFCL(unittest.TestCase):
         cone = fcl.CollisionObject(self.geometry['cone'])
         mesh = fcl.CollisionObject(self.geometry['mesh'])
 
+        result = fcl.CollisionResult()
         ret = fcl.collide(box, cone, self.crequest, result)
         self.assertTrue(ret > 0)
         self.assertTrue(result.is_collision)
 
+        result = fcl.CollisionResult()
         ret = fcl.collide(box, mesh, self.crequest, result)
         self.assertTrue(ret > 0)
         self.assertTrue(result.is_collision)
 
+        result = fcl.CollisionResult()
         ret = fcl.collide(cone, mesh, self.crequest, result)
         self.assertTrue(ret > 0)
         self.assertTrue(result.is_collision)
 
         cone.setTranslation(np.array([0.0, 0.0, -0.6]))
 
+        result = fcl.CollisionResult()
         ret = fcl.collide(box, cone, self.crequest, result)
         self.assertTrue(ret > 0)
         self.assertTrue(result.is_collision)
 
+        result = fcl.CollisionResult()
         ret = fcl.collide(cone, mesh, self.crequest, result)
         self.assertTrue(ret == 0)
         self.assertFalse(result.is_collision)
@@ -73,12 +78,14 @@ class TestFCL(unittest.TestCase):
         cone.setTranslation(np.array([0.0, -0.9, 0.0]))
         cone.setRotation(self.x_axis_rot)
 
+        result = fcl.CollisionResult()
         ret = fcl.collide(box, cone, self.crequest, result)
         self.assertTrue(ret > 0)
         self.assertTrue(result.is_collision)
 
         cone.setTranslation(np.array([0.0, -1.1, 0.0]))
 
+        result = fcl.CollisionResult()
         ret = fcl.collide(box, cone, self.crequest, result)
         self.assertTrue(ret == 0)
         self.assertFalse(result.is_collision)
@@ -90,31 +97,38 @@ class TestFCL(unittest.TestCase):
         cone = fcl.CollisionObject(self.geometry['cone'])
         mesh = fcl.CollisionObject(self.geometry['mesh'])
 
+        result = fcl.DistanceResult()
         ret = fcl.distance(box, cone, self.drequest, result)
         self.assertTrue(ret < 0)
 
+        result = fcl.DistanceResult()
         ret = fcl.distance(box, mesh, self.drequest, result)
         self.assertTrue(ret < 0)
 
+        result = fcl.DistanceResult()
         ret = fcl.distance(cone, mesh, self.drequest, result)
         self.assertTrue(ret < 0)
 
         cone.setTranslation(np.array([0.0, 0.0, -0.6]))
 
+        result = fcl.DistanceResult()
         ret = fcl.distance(box, cone, self.drequest, result)
         self.assertTrue(ret < 0)
 
+        result = fcl.DistanceResult()
         ret = fcl.distance(cone, mesh, self.drequest, result)
         self.assertAlmostEqual(ret, 0.1)
 
         cone.setTranslation(np.array([0.0, -0.9, 0.0]))
         cone.setRotation(self.x_axis_rot)
 
+        result = fcl.DistanceResult()
         ret = fcl.distance(box, cone, self.drequest, result)
         self.assertTrue(ret < 0)
 
         cone.setTranslation(np.array([0.0, -1.1, 0.0]))
 
+        result = fcl.DistanceResult()
         ret = fcl.distance(box, cone, self.drequest, result)
         self.assertAlmostEqual(ret, 0.1)
 
@@ -129,7 +143,7 @@ class TestFCL(unittest.TestCase):
         ret = fcl.continuousCollide(box, fcl.Transform(),
                                     cone, fcl.Transform(),
                                     request, result)
-        
+
         '''
         ## WHY DOES THIS FAIL ##
         self.assertTrue(result.is_collide)
@@ -224,6 +238,47 @@ class TestFCL(unittest.TestCase):
         manager.update(objs[1])
         manager.collide(cdata, fcl.defaultCollisionCallback)
         self.assertTrue(cdata.result.is_collision)
+
+    def test_many_objects(self):
+        manager = fcl.DynamicAABBTreeCollisionManager()
+
+        objs = [fcl.CollisionObject(self.geometry['sphere']),
+                fcl.CollisionObject(self.geometry['sphere'], fcl.Transform(np.array([0.0, 0.0, -5.0]))),
+                fcl.CollisionObject(self.geometry['sphere'], fcl.Transform(np.array([0.0, 0.0, 5.0])))]
+
+        manager.registerObjects(objs)
+        manager.setup()
+
+        self.assertTrue(len(manager.getObjects()) == 3)
+
+        # Many-to-many, internal
+        cdata = fcl.CollisionData(self.crequest, fcl.CollisionResult())
+        manager.collide(cdata, fcl.defaultCollisionCallback)
+        self.assertFalse(cdata.result.is_collision)
+
+        objs[1].setTranslation(np.array([0.0, 0.0, -0.3]))
+        manager.update(objs[1])
+        cdata = fcl.CollisionData(self.crequest, fcl.CollisionResult())
+        manager.collide(cdata, fcl.defaultCollisionCallback)
+        self.assertTrue(cdata.result.is_collision)
+
+        objs[1].setTranslation(np.array([0.0, 0.0, -5.0]))
+        manager.update(objs[1])
+        cdata = fcl.CollisionData(self.crequest, fcl.CollisionResult())
+        manager.collide(cdata, fcl.defaultCollisionCallback)
+        self.assertFalse(cdata.result.is_collision)
+
+        objs[2].setTranslation(np.array([0.0, 0.0, 0.3]))
+        manager.update(objs[2])
+        cdata = fcl.CollisionData(self.crequest, fcl.CollisionResult())
+        manager.collide(cdata, fcl.defaultCollisionCallback)
+        self.assertTrue(cdata.result.is_collision)
+
+        objs[2].setTranslation(np.array([0.0, 0.0, 5.0]))
+        manager.update(objs[2])
+        cdata = fcl.CollisionData(self.crequest, fcl.CollisionResult())
+        manager.collide(cdata, fcl.defaultCollisionCallback)
+        self.assertFalse(cdata.result.is_collision)
 
     def test_managed_distances(self):
         manager1 = fcl.DynamicAABBTreeCollisionManager()

@@ -545,7 +545,7 @@ def collide(CollisionObject o1, CollisionObject o2,
                                    ),
                                    cresult)
 
-    result.is_collision = cresult.isCollision()
+    result.is_collision = result.is_collision or cresult.isCollision()
 
     cdef vector[defs.Contact] contacts
     cresult.getContacts(contacts)
@@ -582,8 +582,8 @@ def continuousCollide(CollisionObject o1, Transform tf1_end,
                                                     ),
                                                     cresult)
 
-    result.is_collide = cresult.is_collide
-    result.time_of_contact = cresult.time_of_contact
+    result.is_collide = result.is_collide or cresult.is_collide
+    result.time_of_contact = min(cresult.time_of_contact, result.time_of_contact)
     return ret
 
 def distance(CollisionObject o1, CollisionObject o2,
@@ -603,7 +603,7 @@ def distance(CollisionObject o1, CollisionObject o2,
                                     ),
                                     cresult)
 
-    result.min_distance = cresult.min_distance
+    result.min_distance = min(cresult.min_distance, result.min_distance)
     result.nearest_points = [vec3f_to_numpy(cresult.nearest_points[0]),
                              vec3f_to_numpy(cresult.nearest_points[1])]
     result.o1 = c_to_python_collision_geometry(cresult.o1, o1, o2)

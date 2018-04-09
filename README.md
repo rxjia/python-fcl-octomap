@@ -240,14 +240,14 @@ manager1.setup()
 manager2.setup()
 
 #=====================================================================
-# Managed internal (n^2) collision checking
+# Managed internal (sub-n^2) collision checking
 #=====================================================================
 cdata = fcl.CollisionData()
 manager1.collide(cdata, fcl.defaultCollisionCallback)
 print 'Collision within manager 1?: {}'.format(cdata.result.is_collision)
 
 ##=====================================================================
-## Managed internal (n^2) distance checking
+## Managed internal (sub-n^2) distance checking
 ##=====================================================================
 ddata = fcl.DistanceData()
 manager1.distance(ddata, fcl.defaultDistanceCallback)

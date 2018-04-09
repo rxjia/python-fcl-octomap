@@ -1,2 +1,3 @@
 # Include the license
 include LICENSE
+include fcl/fcl_defs.pxd

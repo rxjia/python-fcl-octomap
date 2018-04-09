@@ -1,7 +1,7 @@
 
 env:
   global:
-    - CIBW_BEFORE_BUILD="yum install -y gcc && yum install glibc.i386 && pip install numpy cython && cd requirements && bash install_cmake.bash && bash clone.bash && bash build.bash"
+    - CIBW_BEFORE_BUILD="yum install -y gcc && yum install -y glibc.i686 && pip install numpy cython && cd requirements && bash install_cmake.bash && bash clone.bash && bash build.bash"
     - CIBW_TEST_REQUIRES="nose2"
     - CIBW_TEST_COMMAND="cd {project}/test && nose2"
     - CIBW_SKIP="cp33-* cp34-*"

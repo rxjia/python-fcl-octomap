@@ -5,6 +5,13 @@ git pull
 git checkout 64f02f741ac94fccd0fb660a5bffcbe6d01d9939
 cd ..
 
+rm -rf octomap 
+git clone https://github.com/OctoMap/octomap.git
+cd octomap
+git pull
+git checkout b8c1d62a7a64ce0a5df278503f31d73acafa97e4 
+cd ..
+
 rm -rf fcl
 git clone https://github.com/flexible-collision-library/fcl.git
 cd fcl

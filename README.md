@@ -278,4 +278,75 @@ for c in rdata.result.contacts:
     print '\tO1: {}, O2: {}'.format(c.o1, c.o2)
 ```
 
+### Extracting Which Objects Are In Collision
+
+To determine which objects are actually in collision, you'll need parse the collision data's contacts and use an additional external data structure.
+
+Specifically, the `fcl.CollisionData` object that is passed into any `collide()` call has an internal set of contacts, stored in `cdata.result.contacts`.
+This object is a simple list of `Contact` objects, each of which represents a contact point between two objects.
+Each contact object has two attributes, `o1` and `o2`, that store references to the original `fcl.CollisionGeometry` objects were created for the two `fcl.CollisionObject` objects that are in collision.
+This is a bit wonky, but it's part of the FCL API.
+
+Therefore, all you have to do is make a map from the `id` of each `fcl.CollisionGeometry` object to either the actual `fcl.CollisionObject` it corresponds to or to some string identifier for each object.
+Then, you can iterate over `cdata.result.contacts`, extract `o1` and `o2`, apply the built-in `id()` function to each, and find the corresponding data you want in your map.
+
+Here's an example.
+
+```python
+import fcl
+import numpy as np
+
+# Create collision geometry and objects
+geom1 = fcl.Cylinder(1.0, 1.0)
+obj1 = fcl.CollisionObject(geom1)
+
+geom2 = fcl.Cylinder(1.0, 1.0)
+obj2 = fcl.CollisionObject(geom2, fcl.Transform(np.array([0.0, 0.0, 0.3])))
+
+geom3 = fcl.Cylinder(1.0, 1.0)
+obj3 = fcl.CollisionObject(geom3, fcl.Transform(np.array([0.0, 0.0, 3.0])))
+
+geoms = [geom1, geom2, geom3]
+objs = [obj1, obj2, obj3]
+names = ['obj1', 'obj2', 'obj3']
+
+# Create map from geometry IDs to objects
+geom_id_to_obj = { id(geom) : obj for geom, obj in zip(geoms, objs) }
+
+# Create map from geometry IDs to string names
+geom_id_to_name = { id(geom) : name for geom, name in zip(geoms, names) }
+
+# Create manager
+manager = fcl.DynamicAABBTreeCollisionManager()
+manager.registerObjects(objs)
+manager.setup()
+
+# Create collision request structure
+crequest = fcl.CollisionRequest(num_max_contacts=100, enable_contact=True)
+cdata = fcl.CollisionData(crequest, fcl.CollisionResult())
+
+# Run collision request
+manager.collide(cdata, fcl.defaultCollisionCallback)
+
+# Extract collision data from contacts and use that to infer set of
+# objects that are in collision
+objs_in_collision = set()
+
+for contact in cdata.result.contacts:
+    # Extract collision geometries that are in contact
+    coll_geom_0 = contact.o1
+    coll_geom_1 = contact.o2
+
+    # Get their names
+    coll_names = [geom_id_to_name[id(coll_geom_0)], geom_id_to_name[id(coll_geom_1)]]
+    coll_names = tuple(sorted(coll_names))
+    objs_in_collision.add(coll_names)
+
+for coll_pair in objs_in_collision:
+    print('Object {} in collision with object {}!'.format(coll_pair[0], coll_pair[1]))
+```
+
+```
+>>> Object obj1 in collision with object obj2!
+```
 For more examples, see `example/example.py`.

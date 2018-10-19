@@ -1,33 +1,30 @@
-
 env:
   global:
-    - CIBW_BEFORE_BUILD="yum install -y gcc && yum install -y glibc.i686 && pip install numpy cython && cd requirements && bash install_cmake.bash && bash clone.bash && bash build.bash"
-    - CIBW_TEST_REQUIRES="nose2"
-    - CIBW_TEST_COMMAND="cd {project}/test && nose2"
-    - CIBW_SKIP="cp33-* cp34-*"
-    - TWINE_USERNAME=mmatl
-
+  - CIBW_BEFORE_BUILD="yum install -y gcc && yum install -y glibc.i686 && pip install
+    numpy cython && cd requirements && bash install_cmake.bash && bash clone.bash
+    && bash build.bash"
+  - CIBW_TEST_REQUIRES="nose2"
+  - CIBW_TEST_COMMAND="cd {project}/test && nose2"
+  - CIBW_SKIP="cp33-* cp34-*"
+  - TWINE_USERNAME=mmatl
 matrix:
   include:
-    - dist: trusty
-      sudo: required
-      language: python
-      python: "3.6"
-      services:
-        - docker
-
+  - dist: trusty
+    sudo: required
+    language: python
+    python: '3.6'
+    services:
+    - docker
 install:
-  # Python 3 is needed to run cibuildwheel 
-  - if [ "${TRAVIS_OS_NAME:-}" == "osx" ]; then
-      brew install python3;
-    fi
-# Install cibuildwheel using pip3 to make sure Python 3 is used.
-  - pip3 install cibuildwheel==0.7.1
-
+- if [ "${TRAVIS_OS_NAME:-}" == "osx" ]; then brew install python3; fi
+- pip3 install cibuildwheel==0.7.1
 script:
-  - cibuildwheel --output-dir wheelhouse
-  - |
-    if [[ $TRAVIS_TAG ]]; then
-      python -m pip install twine
-      python -m twine upload wheelhouse/*.whl
-    fi
+- cibuildwheel --output-dir wheelhouse
+- |
+  if [[ $TRAVIS_TAG ]]; then
+    python -m pip install twine
+    python -m twine upload wheelhouse/*.whl
+  fi
+deploy:
+  password:
+    secure: uk2FhiCbUmFuq1ehtHOxGfYsW/6SAVBAHpiADDDcaxnArpBzymDXJ5uzj4eGLZocnA2pDcDexyk+ITN/GChcEwwMr74Bc2WlyPdrnArdi7lyLfXP6uH0ZvXXwkfqtUuAb08v6n6PFYf+O8z6sSLDDxFZJgaSoWOX+nywV2kxEHaqe11XELSR1gSbbRmTB5CQFMBRj7jlf8tdzbutwkipKllsLspWmfkDOr6qBnURVYvUFSwY3bN2108ga8LykZl3BT04mDaXT6Fts+TBxpnNvigRz9ppif29K1YWyj8dVwu/cZA2Bv37vx6NT/6TDEu3eTofUbH/RhzAs/dACjH36bdxNIYcsC+7+bKuE7kA0741VE4m6/xGevKBXVQpjZcf/UrKcVCyuSsUBe9oOKxjqhpJuL1WanfH9Dfl61QdD+RGmkpFOeuGIevZ4uW43iohe+epLrTrNB7vafh2l5yL2+dDodcW/Ydiqu4aO3j6rVS0+frEdgGr58UaXokle3N77EZldC/mzQrffKns1SpgJPTMlKH2SSYnMSPKr9Od5P+QPxKDmJ20PBzNpP4tI/x35w1+KQwA+lv3p0mT5zYcWmrt5NndVwaP/SyTLHqvUGQ3bCpOahLw/897/IvoT/fdxUKR4dlKOPd+IddAHkujNli1jpSMWJzpaM+zVPS4rk8=

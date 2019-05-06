@@ -89,7 +89,7 @@ cdef class CollisionObject:
         defs.Py_INCREF(<defs.PyObject*> geom)
         self.geom = <defs.PyObject*> geom
         self._no_instance = _no_instance
-        if geom.getNodeType() is not None:
+        if geom.getNodeType() is not None and not self._no_instance:
             if tf is not None:
                 self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](geom.thisptr), deref(tf.thisptr))
             else:

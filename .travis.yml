@@ -12,12 +12,12 @@ matrix:
   - dist: trusty
     sudo: required
     language: python
-    python: '3.6'
+    python: '3.7'
     services:
     - docker
 install:
 - if [ "${TRAVIS_OS_NAME:-}" == "osx" ]; then brew install python3; fi
-- pip3 install cibuildwheel==0.7.1
+- pip3 install cibuildwheel==0.11.1
 script:
 - cibuildwheel --output-dir wheelhouse
 - |

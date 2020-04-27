@@ -16,6 +16,21 @@ cimport octomap_defs as octomap
 cimport std_defs as std 
 from collision_data import Contact, CostSource, CollisionRequest, ContinuousCollisionRequest, CollisionResult, ContinuousCollisionResult, DistanceRequest, DistanceResult
 
+"""
+Eigen::Transform linear and translation parts are returned as Eigen::Block
+It can be an rvalue and an lvalue, so in C++ you could assign something to translation() like:
+    `tf.translation() = (Vector3d (0., 0., 50));`
+In python and cython however, a function call is never an lvalue, so we workaround with the following macro
+"""
+cdef extern from *:
+    """
+    /* Verbatim C as a workaround for assingment to lvalue-returning functions*/
+    #define ASSIGN(a, b) a = b
+    """
+    void ASSIGN(defs.Vector3d&, defs.Vector3d)
+    void ASSIGN(defs.Matrix3d&, defs.Matrix3d)
+    #void ASSIGN[T](T&, T)  # This doesn't work somehow
+
 ###############################################################################
 # Transforms
 ###############################################################################
@@ -25,31 +40,51 @@ cdef class Transform:
     def __cinit__(self, *args):
         if len(args) == 0:
             self.thisptr = new defs.Transform3d()
+            self.thisptr.setIdentity()
         elif len(args) == 1:
             if isinstance(args[0], Transform):
                 self.thisptr = new defs.Transform3d(deref((<Transform> args[0]).thisptr))
-#            else:
-#                data = numpy.array(args[0])
-#                if data.shape == (3,3):
-#                    self.thisptr = new defs.Transform3d(numpy_to_mat3d(data))
-#                elif data.shape == (4,):
-#                    self.thisptr = new defs.Transform3d(numpy_to_quaternion3d(data))
-#                elif data.shape == (3,):
-#                    self.thisptr = new defs.Transform3d(numpy_to_vec3d(data))
-#                else:
-#                    raise ValueError('Invalid input to Transform().')
+            else:
+                data = numpy.array(args[0])
+                if data.shape == (3,3):
+                    self.thisptr = new defs.Transform3d()
+                    self.thisptr.setIdentity()
+                    ASSIGN(self.thisptr.linear(),
+                           numpy_to_mat3d(data))
+                elif data.shape == (4,):
+                    self.thisptr = new defs.Transform3d()
+                    self.thisptr.setIdentity()
+                    ASSIGN(self.thisptr.linear(),
+                           numpy_to_quaternion3d(data).toRotationMatrix())
+                elif data.shape == (3,):
+                    self.thisptr = new defs.Transform3d()
+                    self.thisptr.setIdentity()
+                    ASSIGN(self.thisptr.translation(),
+                           numpy_to_vec3d(data))
+                else:
+                    raise ValueError('Invalid input to Transform().')
         elif len(args) == 2:
             rot = numpy.array(args[0])
             trans = numpy.array(args[1]).squeeze()
             if not trans.shape == (3,):
                 raise ValueError('Translation must be (3,).')
 
-#            if rot.shape == (3,3):
-#                self.thisptr = new defs.Transform3d(numpy_to_mat3d(rot), numpy_to_vec3d(trans))
-#            elif rot.shape == (4,):
-#                self.thisptr = new defs.Transform3d(numpy_to_quaternion3d(rot), numpy_to_vec3d(trans))
-#            else:
-#                raise ValueError('Invalid input to Transform().')
+            if rot.shape == (3,3):
+                self.thisptr = new defs.Transform3d()
+                self.thisptr.setIdentity()
+                ASSIGN(self.thisptr.linear(),
+                       numpy_to_mat3d(rot))
+                ASSIGN(self.thisptr.translation(),
+                       numpy_to_vec3d(trans))
+            elif rot.shape == (4,):
+                self.thisptr = new defs.Transform3d()
+                self.thisptr.setIdentity()
+                ASSIGN(self.thisptr.linear(),
+                       numpy_to_quaternion3d(rot).toRotationMatrix())
+                ASSIGN(self.thisptr.translation(),
+                       numpy_to_vec3d(trans))
+            else:
+                raise ValueError('Invalid input to Transform().')
         else:
             raise ValueError('Too many arguments to Transform().')
 
@@ -57,23 +92,27 @@ cdef class Transform:
         if self.thisptr:
             free(self.thisptr)
 
-#    def getRotation(self):
-#        return mat3d_to_numpy(self.thisptr.getRotation())
+    def getRotation(self):
+        return mat3d_to_numpy(self.thisptr.linear())
 
-#    def getTranslation(self):
-#        return vec3d_to_numpy(self.thisptr.getTranslation())
+    def getTranslation(self):
+        return vec3d_to_numpy(self.thisptr.translation())
 
-#    def getQuatRotation(self):
-#        return quaternion3d_to_numpy(self.thisptr.getQuatRotation())
+    def getQuatRotation(self):
+        cdef defs.Quaterniond quaternion = defs.Quaterniond(self.thisptr.linear())
+        return quaternion3d_to_numpy(quaternion)
 
-#    def setRotation(self, R):
-#        self.thisptr.setRotation(numpy_to_mat3d(R))
+    def setRotation(self, R):
+        ASSIGN(self.thisptr.linear(),
+               numpy_to_mat3d(R))
 
-#    def setTranslation(self, T):
-#        self.thisptr.setTranslation(numpy_to_vec3d(T))
+    def setTranslation(self, T):
+        ASSIGN(self.thisptr.translation(),
+               numpy_to_vec3d(T))
 
-#    def setQuatRotation(self, q):
-#        self.thisptr.setQuatRotation(numpy_to_quaternion3d(q))
+    def setQuatRotation(self, q):
+        ASSIGN(self.thisptr.linear(),
+               numpy_to_quaternion3d(q).toRotationMatrix())
 
 ###############################################################################
 # Collision objects and geometries
@@ -121,12 +160,12 @@ cdef class CollisionObject:
     def getRotation(self):
         return mat3d_to_numpy(self.thisptr.getRotation())
 
-#    def setRotation(self, mat):
-#        self.thisptr.setRotation(numpy_to_mat3d(mat))
-#        self.thisptr.computeAABB()
+    def setRotation(self, mat):
+        self.thisptr.setRotation(numpy_to_mat3d(mat))
+        self.thisptr.computeAABB()
 
-#    def getQuatRotation(self):
-#        return quaternion3d_to_numpy(self.thisptr.getQuatRotation())
+    def getQuatRotation(self):
+        return quaternion3d_to_numpy(self.thisptr.getQuatRotation())
 
     def setQuatRotation(self, q):
         self.thisptr.setQuatRotation(numpy_to_quaternion3d(q))
@@ -295,10 +334,8 @@ cdef class Cylinder(CollisionGeometry):
             (<defs.Cylinderd*> self.thisptr).lz = <double?> value
 
 cdef class Halfspace(CollisionGeometry):
-    def __cinit__(self, n, d):
-        self.thisptr = new defs.Halfspaced(defs.Vector3d(<double?> n[0],
-                                                     <double?> n[1],
-                                                     <double?> n[2]),
+    def __cinit__(self, np.ndarray[double, ndim=1, mode="c"] n, d):
+        self.thisptr = new defs.Halfspaced(defs.Vector3d(&n[0]),
                                           <double?> d)
 
     property n:
@@ -316,10 +353,8 @@ cdef class Halfspace(CollisionGeometry):
             (<defs.Halfspaced*> self.thisptr).d = <double?> value
 
 cdef class Plane(CollisionGeometry):
-    def __cinit__(self, n, d):
-        self.thisptr = new defs.Planed(defs.Vector3d(<double?> n[0],
-                                                 <double?> n[1],
-                                                 <double?> n[2]),
+    def __cinit__(self, np.ndarray[double, ndim=1, mode="c"] n, d):
+        self.thisptr = new defs.Planed(defs.Vector3d(&n[0]),
                                       <double?> d)
 
     property n:
@@ -355,7 +390,8 @@ cdef class BVHModel(CollisionGeometry):
         return n
 
     def addVertex(self, x, y, z):
-        n = (<defs.BVHModel*> self.thisptr).addVertex(defs.Vector3d(<double?> x, <double?> y, <double?> z))
+        cdef np.ndarray[double, ndim=1, mode="c"] n = numpy.array([x, y, z])
+        n = (<defs.BVHModel*> self.thisptr).addVertex(defs.Vector3d(&n[0]))
         return self._check_ret_value(n)
 
     def addTriangle(self, v1, v2, v3):
@@ -705,8 +741,8 @@ cdef inline bool DistanceCallBack(defs.CollisionObjectd*o1, defs.CollisionObject
 # Helper Functions
 ###############################################################################
 
-#cdef quaternion3d_to_numpy(defs.Quaterniond q):
-#    return numpy.array([q.getW(), q.getX(), q.getY(), q.getZ()])
+cdef quaternion3d_to_numpy(defs.Quaterniond q):
+    return numpy.array([q.w(), q.x(), q.y(), q.z()])
 
 cdef defs.Quaterniond numpy_to_quaternion3d(a):
     return defs.Quaterniond(<double?> a[0], <double?> a[1], <double?> a[2], <double?> a[3])
@@ -714,18 +750,16 @@ cdef defs.Quaterniond numpy_to_quaternion3d(a):
 cdef vec3d_to_numpy(defs.Vector3d vec):
     return numpy.array([vec[0], vec[1], vec[2]])
 
-cdef defs.Vector3d numpy_to_vec3d(a):
-    return defs.Vector3d(<double?> a[0], <double?> a[1], <double?> a[2])
+cdef defs.Vector3d numpy_to_vec3d(np.ndarray[double, ndim=1, mode="c"] a):
+    return defs.Vector3d(&a[0])
 
 cdef mat3d_to_numpy(defs.Matrix3d m):
     return numpy.array([[m(0,0), m(0,1), m(0,2)],
                         [m(1,0), m(1,1), m(1,2)],
                         [m(2,0), m(2,1), m(2,2)]])
 
-#cdef defs.Matrix3d numpy_to_mat3d(a):
-#    return defs.Matrix3d(<double?> a[0][0], <double?> a[0][1], <double?> a[0][2],
-#                         <double?> a[1][0], <double?> a[1][1], <double?> a[1][2],
-#                         <double?> a[2][0], <double?> a[2][1], <double?> a[2][2])
+cdef defs.Matrix3d numpy_to_mat3d(np.ndarray[double, ndim=2, mode="c"] a):
+    return defs.Matrix3d(&a[0, 0])
 
 cdef c_to_python_collision_geometry(defs.const_CollisionGeometryd*geom, CollisionObject o1, CollisionObject o2):
     cdef CollisionGeometry o1_py_geom = <CollisionGeometry> ((<defs.CollisionObjectd*> o1.thisptr).getUserData())

@@ -21,41 +21,30 @@ cdef extern from "Python.h":
 cdef extern from "fcl/common/types.h" namespace "fcl":
     cdef cppclass Vector3d:
         Vector3d() except +
-        Vector3d(double x, double y, double z) except +
+        Vector3d(double *data) except +
         double& operator[](size_t i)
 
     cdef cppclass Matrix3d:
         Matrix3d() except +
-#        Matrix3d(double xx, double xy, double xz,
-#                 double yx, double yy, double yz,
-#                 double zx, double zy, double zz) except +
+        Matrix3d(double *data)
         double operator()(size_t i, size_t j)
 
     cdef cppclass Quaterniond:
         Quaterniond() except +
-        Quaterniond(double a, double b,
-                     double c, double d) except +
-        void fromRotation(Matrix3d& R)
-        void fromAxisAngle(Vector3d& axis, double angle)
-#        double& getW()
-#        double& getX()
-#        double& getY()
-#        double& getZ()
+        Quaterniond(double a, double b, double c, double d) except +
+        Quaterniond(Matrix3d& R) except +
+        double& w()
+        double& x()
+        double& y()
+        double& z()
+        Matrix3d& toRotationMatrix()
 
     cdef cppclass Transform3d:
         Transform3d() except +
-#        Transform3d(Matrix3d& R_, Vector3d& T_)
-#        Transform3d(Quaterniond& q_, Vector3d& T_)
-#        Transform3d(Matrix3d& R_)
-#        Transform3d(Quaterniond& q_)
-#        Transform3d(Vector3d& T_)
         Transform3d(Transform3d& tf_)
-#        Matrix3d& getRotation()
-#        Vector3d& getTranslation()
-#        Quaterniond& getQuatRotation()
-#        void setRotation(Matrix3d& R_)
-#        void setTranslation(Vector3d& T_)
-#        void setQuatRotation(Quaterniond & q_)
+        void setIdentity()
+        Matrix3d& linear()
+        Vector3d& translation()
 
 cdef extern from "fcl/narrowphase/continuous_collision_request.h" namespace "fcl":
     cdef enum CCDMotionType:

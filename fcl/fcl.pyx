@@ -334,7 +334,7 @@ cdef class Cylinder(CollisionGeometry):
             (<defs.Cylinderd*> self.thisptr).lz = <double?> value
 
 cdef class Halfspace(CollisionGeometry):
-    def __cinit__(self, np.ndarray[double, ndim=1, mode="c"] n, d):
+    def __cinit__(self, np.ndarray[double, ndim=1] n, d):
         self.thisptr = new defs.Halfspaced(defs.Vector3d(&n[0]),
                                           <double?> d)
 
@@ -353,7 +353,7 @@ cdef class Halfspace(CollisionGeometry):
             (<defs.Halfspaced*> self.thisptr).d = <double?> value
 
 cdef class Plane(CollisionGeometry):
-    def __cinit__(self, np.ndarray[double, ndim=1, mode="c"] n, d):
+    def __cinit__(self, np.ndarray[double, ndim=1] n, d):
         self.thisptr = new defs.Planed(defs.Vector3d(&n[0]),
                                       <double?> d)
 
@@ -390,7 +390,7 @@ cdef class BVHModel(CollisionGeometry):
         return n
 
     def addVertex(self, x, y, z):
-        cdef np.ndarray[double, ndim=1, mode="c"] n = numpy.array([x, y, z])
+        cdef np.ndarray[double, ndim=1] n = numpy.array([x, y, z])
         n = (<defs.BVHModel*> self.thisptr).addVertex(defs.Vector3d(&n[0]))
         return self._check_ret_value(n)
 
@@ -750,7 +750,7 @@ cdef defs.Quaterniond numpy_to_quaternion3d(a):
 cdef vec3d_to_numpy(defs.Vector3d vec):
     return numpy.array([vec[0], vec[1], vec[2]])
 
-cdef defs.Vector3d numpy_to_vec3d(np.ndarray[double, ndim=1, mode="c"] a):
+cdef defs.Vector3d numpy_to_vec3d(np.ndarray[double, ndim=1] a):
     return defs.Vector3d(&a[0])
 
 cdef mat3d_to_numpy(defs.Matrix3d m):
@@ -758,8 +758,11 @@ cdef mat3d_to_numpy(defs.Matrix3d m):
                         [m(1,0), m(1,1), m(1,2)],
                         [m(2,0), m(2,1), m(2,2)]])
 
-cdef defs.Matrix3d numpy_to_mat3d(np.ndarray[double, ndim=2, mode="c"] a):
-    return defs.Matrix3d(&a[0, 0])
+cdef defs.Matrix3d numpy_to_mat3d(np.ndarray[double, ndim=2] a):
+    # NOTE Eigen defaults to column-major storage,
+    # which corresponds to non-default Fortran mode of ordering in numpy
+    cdef np.ndarray[double, ndim=2, mode='fortran'] f = np.ndarray.copy(a, order='F')
+    return defs.Matrix3d(&f[0, 0])
 
 cdef c_to_python_collision_geometry(defs.const_CollisionGeometryd*geom, CollisionObject o1, CollisionObject o2):
     cdef CollisionGeometry o1_py_geom = <CollisionGeometry> ((<defs.CollisionObjectd*> o1.thisptr).getUserData())

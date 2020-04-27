@@ -507,18 +507,18 @@ cdef class DynamicAABBTreeCollisionManager:
         else:
             raise ValueError
 
-#    def distance(self, *args):
-#        if len(args) == 2 and inspect.isroutine(args[1]):
-#            fn = DistanceFunction(args[1], args[0])
-#            self.thisptr.distance(<void*> fn, DistanceCallBack)
-#        elif len(args) == 3 and isinstance(args[0], DynamicAABBTreeCollisionManager):
-#            fn = DistanceFunction(args[2], args[1])
-#            self.thisptr.distance((<DynamicAABBTreeCollisionManager?> args[0]).thisptr, <void*> fn, DistanceCallBack)
-#        elif len(args) == 3 and inspect.isroutine(args[2]):
-#            fn = DistanceFunction(args[2], args[1])
-#            self.thisptr.distance((<CollisionObject?> args[0]).thisptr, <void*> fn, DistanceCallBack)
-#        else:
-#            raise ValueError
+    def distance(self, *args):
+        if len(args) == 2 and inspect.isroutine(args[1]):
+            fn = DistanceFunction(args[1], args[0])
+            self.thisptr.distance(<void*> fn, DistanceCallBack)
+        elif len(args) == 3 and isinstance(args[0], DynamicAABBTreeCollisionManager):
+            fn = DistanceFunction(args[2], args[1])
+            self.thisptr.distance((<DynamicAABBTreeCollisionManager?> args[0]).thisptr, <void*> fn, DistanceCallBack)
+        elif len(args) == 3 and inspect.isroutine(args[2]):
+            fn = DistanceFunction(args[2], args[1])
+            self.thisptr.distance((<CollisionObject?> args[0]).thisptr, <void*> fn, DistanceCallBack)
+        else:
+            raise ValueError
 
     def clear(self):
         self.thisptr.clear()
@@ -637,31 +637,31 @@ def continuousCollide(CollisionObject o1, Transform tf1_end,
     result.time_of_contact = min(cresult.time_of_contact, result.time_of_contact)
     return ret
 
-#def distance(CollisionObject o1, CollisionObject o2,
-#             request = None, result=None):
-#
-#    if request is None:
-#        request = DistanceRequest()
-#    if result is None:
-#        result = DistanceResult()
-#
-#    cdef defs.DistanceResultd cresult
-#
-#    cdef double dis = defs.distance(o1.thisptr, o2.thisptr,
-#                                    defs.DistanceRequestd(
-#                                        <bool?> request.enable_nearest_points,
-#                                        <defs.GJKSolverType?> request.gjk_solver_type
-#                                    ),
-#                                    cresult)
-#
-#    result.min_distance = min(cresult.min_distance, result.min_distance)
-#    result.nearest_points = [vec3d_to_numpy(cresult.nearest_points[0]),
-#                             vec3d_to_numpy(cresult.nearest_points[1])]
-#    result.o1 = c_to_python_collision_geometry(cresult.o1, o1, o2)
-#    result.o2 = c_to_python_collision_geometry(cresult.o2, o1, o2)
-#    result.b1 = cresult.b1
-#    result.b2 = cresult.b2
-#    return dis
+def distance(CollisionObject o1, CollisionObject o2,
+             request = None, result=None):
+
+    if request is None:
+        request = DistanceRequest()
+    if result is None:
+        result = DistanceResult()
+
+    cdef defs.DistanceResultd cresult
+
+    cdef double dis = defs.distance(o1.thisptr, o2.thisptr,
+                                    defs.DistanceRequestd(
+                                        <bool?> request.enable_nearest_points,
+                                        <defs.GJKSolverType?> request.gjk_solver_type
+                                    ),
+                                    cresult)
+
+    result.min_distance = min(cresult.min_distance, result.min_distance)
+    result.nearest_points = [vec3d_to_numpy(cresult.nearest_points[0]),
+                             vec3d_to_numpy(cresult.nearest_points[1])]
+    result.o1 = c_to_python_collision_geometry(cresult.o1, o1, o2)
+    result.o2 = c_to_python_collision_geometry(cresult.o2, o1, o2)
+    result.b1 = cresult.b1
+    result.b2 = cresult.b2
+    return dis
 
 ###############################################################################
 # Collision and Distance Callback Functions
@@ -687,9 +687,9 @@ def defaultDistanceCallback(CollisionObject o1, CollisionObject o2, cdata):
 
     if cdata.done:
         return True, result.min_distance
-#
-#    distance(o1, o2, request, result)
-#
+
+    distance(o1, o2, request, result)
+
     dist = result.min_distance
 
     if dist <= 0:

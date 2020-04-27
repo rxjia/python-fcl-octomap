@@ -20,7 +20,7 @@ for prefix in ['darwin', 'linux', 'bsd']:
         platform_supported = True
         include_dirs = ['/usr/include',
                         '/usr/local/include',
-                        '/usr/include/eigen3']
+                        '/usr/local/include/eigen3']
         lib_dirs = ['/usr/lib',
                     '/usr/local/lib']
         

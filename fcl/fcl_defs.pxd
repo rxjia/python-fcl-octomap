@@ -309,7 +309,7 @@ cdef extern from "fcl/narrowphase/distance.h" namespace "fcl":
                       CollisionGeometryd* o2, Transform3d& tf2,
                       DistanceRequestd& request, DistanceResultd& result)
 
-cdef extern from "fcl/geometry/BVH/BVH_internal.h" namespace "fcl":
+cdef extern from "fcl/geometry/bvh/BVH_internal.h" namespace "fcl":
     cdef enum BVHModelType:
         BVH_MODEL_UNKNOWN,   # unknown model type
         BVH_MODEL_TRIANGLES, # triangle model
@@ -342,15 +342,15 @@ cdef extern from "fcl/math/triangle.h" namespace "fcl":
         size_t vids[3]
 
 # TODO what about these guys?
-cdef extern from "fcl/geometry/BVH/detail/BV_splitter_base.h" namespace "fcl":
+cdef extern from "fcl/geometry/bvh/detail/BV_splitter_base.h" namespace "fcl":
     cdef cppclass BVSplitterBase:
         pass
 
-cdef extern from "fcl/geometry/BVH/detail/BV_fitter_base.h" namespace "fcl":
+cdef extern from "fcl/geometry/bvh/detail/BV_fitter_base.h" namespace "fcl":
     cdef cppclass BVFitterBase:
         pass
 
-cdef extern from "fcl/geometry/BVH/BVH_model.h" namespace "fcl":
+cdef extern from "fcl/geometry/bvh/BVH_model.h" namespace "fcl":
     # Cython only accepts type template parameters.
     # see https://groups.google.com/forum/#!topic/cython-users/xAZxdCFw6Xs
     cdef cppclass BVHModel "fcl::BVHModel<fcl::OBBRSSd>" ( CollisionGeometryd ):

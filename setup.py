@@ -19,8 +19,8 @@ for prefix in ['darwin', 'linux', 'bsd']:
     if prefix in sys.platform:
         platform_supported = True
         include_dirs = ['/usr/include',
-                        '/usr/local/include',
-                        '/usr/local/include/eigen3']
+                        '/usr/include',
+                        '/usr/include/eigen3']
         lib_dirs = ['/usr/lib',
                     '/usr/local/lib']
         
@@ -49,9 +49,9 @@ setup(
     version=__version__,
     description='Python bindings for the Flexible Collision Library',
     long_description='Python bindings for the Flexible Collision Library',
-    url='https://github.com/BerkeleyAutomation/python-fcl',
-    author='Matthew Matl',
-    author_email='mmatl@eecs.berkeley.edu',
+    url='https://github.com/CyrilWaechter/python-fcl',
+    author='Cyril Waechter',
+    author_email='cyrwae@hotmail.com',
     license = "BSD",
     classifiers=[
         'Development Status :: 3 - Alpha',

@@ -1,11 +1,12 @@
+# Disclaimer
+This is fork of https://github.com/BerkeleyAutomation/python-fcl intented to be used in [ifcopenshell](https://github.com/IfcOpenShell/IfcOpenShell) / [BlenderBIM Add-on](https://blenderbim.org/) as orgininal repo is currently unactive and is not merging any PR.
+
 # python-fcl
 ### Python Interface for the Flexible Collision Library
 
-[![Build Status](https://travis-ci.org/BerkeleyAutomation/python-fcl.svg?branch=master)](https://travis-ci.org/BerkeleyAutomation/python-fcl)
-
 Python-FCL is an (unofficial) Python interface for the [Flexible Collision Library (FCL)](https://github.com/flexible-collision-library/fcl),
 an excellent C++ library for performing proximity and collision queries on pairs of geometric models.
-Currently, this package is targeted for FCL 0.5.0.
+Currently, this package is targeted for FCL 0.6.1.
 
 This package supports three types of proximity queries for pairs of geometric models:
 * __Collision Detection__: Detecting whether two models overlap (and optionally where).

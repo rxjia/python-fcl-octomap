@@ -19,8 +19,9 @@ for prefix in ['darwin', 'linux', 'bsd']:
     if prefix in sys.platform:
         platform_supported = True
         include_dirs = ['/usr/include',
-                        '/usr/include',
-                        '/usr/include/eigen3']
+                        '/usr/local/include',
+                        '/usr/include/eigen3',
+                        '/usr/local/include/eigen3']
         lib_dirs = ['/usr/lib',
                     '/usr/local/lib']
         

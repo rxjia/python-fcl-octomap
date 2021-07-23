@@ -1,24 +1,12 @@
 rm -rf libccd
-git clone https://github.com/danfis/libccd.git
-cd libccd
-git pull
-git checkout 64f02f741ac94fccd0fb660a5bffcbe6d01d9939
-cd ..
+git clone --depth 1 --branch v2.1 https://github.com/danfis/libccd.git
 
 rm -rf octomap 
-git clone https://github.com/OctoMap/octomap.git
-cd octomap
-git pull
-git checkout b8c1d62a7a64ce0a5df278503f31d73acafa97e4 
-cd ..
+git clone --depth 1 --branch v1.8.0 https://github.com/OctoMap/octomap.git
 
 rm -rf fcl
-git clone https://github.com/flexible-collision-library/fcl.git
-cd fcl
-git pull
-git checkout 22f375f333beccc10c527974cef96784f0841649
-cd ..
+git clone --depth 1 --branch v0.6.1 https://github.com/flexible-collision-library/fcl.git
 
 # get eigen
-#curl -OL https://github.com/RLovelett/eigen/archive/3.3.4.tar.gz
-#tar -zxvf 3.3.4.tar.gz
+curl -OL https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
+tar -zxf eigen-3.3.9.tar.gz

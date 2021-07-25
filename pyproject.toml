@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel", "numpy", "Cython"]
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
-before-all = "bash requirements/clone.bash && bash requirements/build.bash"
+before-all = "bash build_dependencies/install_linux.sh"
 before-build = "pip install numpy cython"
 manylinux-x86_64-image = "manylinux_2_24"
 test-requires = "pytest"

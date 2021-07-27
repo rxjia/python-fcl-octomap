@@ -4,26 +4,34 @@ import sys
 from setuptools import Extension, setup
 from Cython.Build import cythonize
 
+INSTALL_PREFIX_WIN = "deps\\install"
 
-def get_include_dirs():
-    platform_supported = False
+
+def is_nix_platform(platform):
     for prefix in ["darwin", "linux", "bsd"]:
         if prefix in sys.platform:
-            platform_supported = True
-            include_dirs = [
-                "/usr/include",
-                "/usr/local/include",
-                "/usr/include/eigen3",
-                "/usr/local/include/eigen3",
-            ]
+            return True
+    return False
 
-            if "CPATH" in os.environ:
-                include_dirs += os.environ["CPATH"].split(":")
 
-            break
-    if sys.platform == "win32":
-        platform_supported = False
-    if not platform_supported:
+def get_include_dirs():
+    if is_nix_platform(sys.platform):
+        include_dirs = [
+            "/usr/include",
+            "/usr/local/include",
+            "/usr/include/eigen3",
+            "/usr/local/include/eigen3",
+        ]
+
+        if "CPATH" in os.environ:
+            include_dirs += os.environ["CPATH"].split(":")
+
+    elif sys.platform == "win32":
+        include_dirs = [
+            f"{INSTALL_PREFIX_WIN}\\include",
+            f"{INSTALL_PREFIX_WIN}\\include\\eigen3",
+        ]
+    else:
         raise NotImplementedError(sys.platform)
 
     # get the numpy include path from numpy
@@ -34,15 +42,23 @@ def get_include_dirs():
 
 
 def get_libraries_dir():
-    for prefix in ["darwin", "linux", "bsd"]:
-        if prefix in sys.platform:
-            platform_supported = True
-            lib_dirs = ["/usr/lib", "/usr/local/lib"]
+    if is_nix_platform(sys.platform):
+        lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
-            if "LD_LIBRARY_PATH" in os.environ:
-                lib_dirs += os.environ["LD_LIBRARY_PATH"].split(":")
-            return lib_dirs
+        if "LD_LIBRARY_PATH" in os.environ:
+            lib_dirs += os.environ["LD_LIBRARY_PATH"].split(":")
+        return lib_dirs
+    if sys.platform == "win32":
+        return [f"{INSTALL_PREFIX_WIN}\\lib"]
+
     raise NotImplementedError(sys.platform)
+
+
+def get_libraries():
+    libraries = ["fcl", "octomap"]
+    if sys.platform == "win32":
+        libraries.extend(["octomath", "ccd", "vcruntime"])
+    return libraries
 
 
 setup(
@@ -53,7 +69,7 @@ setup(
                 ["src/fcl/fcl.pyx"],
                 include_dirs=get_include_dirs(),
                 library_dirs=get_libraries_dir(),
-                libraries=["fcl", "octomap"],
+                libraries=get_libraries(),
                 language="c++",
                 extra_compile_args=["-std=c++11"],
             )

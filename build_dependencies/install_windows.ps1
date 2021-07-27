@@ -11,10 +11,14 @@ It downloads, builds, installs, and then deletes:
  * octomap
 #>
 
+# Remember starting location for future usage
 $base_dir = Get-Location
 
 # Create a directory that encapsulates all dependencies
 mkdir -p deps; Set-Location deps
+
+# Build options
+$generator = "Visual Studio 16 2019"
 
 # All compiled depencies will be install in following folder
 $install_dir = "$base_dir\deps\install"
@@ -30,7 +34,7 @@ Set-Location "eigen-$eigen_ver"
 
 cmake -B build `
     -D CMAKE_BUILD_TYPE=Release `
-    -G "Visual Studio 16 2019" `
+    -G $generator `
     -D BUILD_SHARED_LIBS=ON `
     -D CMAKE_INSTALL_PREFIX=$install_dir
 cmake --install build
@@ -46,7 +50,7 @@ Set-Location libccd
 
 cmake -B build `
     -D CMAKE_BUILD_TYPE=Release `
-    -G "Visual Studio 16 2019" `
+    -G $generator `
     -D BUILD_SHARED_LIBS=ON `
     -D CMAKE_INSTALL_PREFIX=$install_dir
 cmake --build build --config Release --target install
@@ -63,7 +67,7 @@ Set-Location octomap
 cmake -B build `
     -D CMAKE_PREFIX_PATH=$install_dir `
     -D CMAKE_BUILD_TYPE=Release `
-    -G "Visual Studio 16 2019" `
+    -G $generator `
     -D BUILD_SHARED_LIBS=ON `
     -D CMAKE_INSTALL_PREFIX=$install_dir `
     -D BUILD_OCTOVIS_SUBPROJECT=OFF `
@@ -82,11 +86,10 @@ Set-Location fcl
 cmake -B build `
     -D CMAKE_PREFIX_PATH=$install_dir `
     -D CMAKE_BUILD_TYPE=Release `
-    -G "Visual Studio 16 2019" `
+    -G $generator `
     -D CMAKE_INSTALL_PREFIX=$install_dir
 
 cmake --build build --config Release --target install
-Write-Host "Done"
 Set-Location ..
 
 # ------------------------------------------------------------------------------

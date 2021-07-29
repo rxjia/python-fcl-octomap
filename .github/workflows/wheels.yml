@@ -16,3 +16,10 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         path: ./wheelhouse/*.whl
+    - uses: xresloader/upload-to-github-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        file: ./wheelhouse/*.whl
+        overwrite: true
+        update_latest_release: true

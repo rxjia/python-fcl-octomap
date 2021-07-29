@@ -4,7 +4,7 @@ but with many modification in order to use fcl 0.6.1 and install dependencies wi
 
 This script builds fcl and it's dependencies for python-fcl on Windows.
 
-It downloads, builds, installs, and then deletes:
+It downloads, builds, installs:
  * fcl
  * libccd
  * eigen

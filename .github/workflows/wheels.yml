@@ -22,4 +22,6 @@ jobs:
       with:
         file: ./wheelhouse/*.whl
         overwrite: true
+        draft: false
         update_latest_release: true
+        tag_name: v0.6.1

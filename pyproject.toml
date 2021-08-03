@@ -1,11 +1,12 @@
 [build-system]
-requires = ["setuptools", "wheel", "numpy", "Cython"]
+requires = ["setuptools", "wheel", "oldest-supported-numpy", "Cython"]
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
 skip = "pp*"
-before-build = "pip install -r blender_requirements.txt"
 manylinux-x86_64-image = "manylinux_2_24"
+test-requires = "pytest"
+test-command = "pytest {package}/test"
 
 [tool.cibuildwheel.linux]
 before-all = "bash build_dependencies/install_linux.sh"
@@ -13,11 +14,7 @@ archs = ["x86_64"]
 
 [tool.cibuildwheel.macos]
 before-all = "bash build_dependencies/install_macos.sh"
-test-requires = "pytest"
-test-command = "pytest {package}/test"
 
 [tool.cibuildwheel.windows]
 before-all = "powershell build_dependencies\\install_windows_ci.ps1"
 archs = ["AMD64"]
-test-requires = "pytest"
-test-command = "pytest {package}\\test"

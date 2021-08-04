@@ -6,16 +6,11 @@
 # ln -sf requirements/Dockerfile .
 # docker build . -t pythonfcl
 
-FROM quay.io/pypa/manylinux_2_24_x86_64:latest
-
-# clone FCL and libccd
-# the exact checkouts are in clone.bash
-COPY requirements/clone.bash .
-RUN bash clone.bash
+FROM quay.io/pypa/manylinux2010_x86_64:latest
 
 # build and install libccd and fcl using cmake
-COPY requirements/build.bash .
-RUN bash build.bash
+COPY build_dependencies/install_linux.sh .
+RUN bash install_linux.sh
 
 # manylinux includes a bunch of pythons
 # to test with others change this env variable
@@ -31,4 +26,4 @@ COPY . /python_fcl
 RUN pip wheel /python_fcl --no-deps -w wheelhouse/
 RUN pip install /python_fcl --no-index -f  /wheelhouse
 RUN ls /wheelhouse
-RUN auditwheel repair wheelhouse/python_fcl-0.6.1-cp39-cp39-linux_x86_64.whl --plat manylinux_2_24_x86_64 -w /wheelhouse
+RUN auditwheel repair wheelhouse/python_fcl-0.6.1-cp39-cp39-linux_x86_64.whl --plat manylinux2010_x86_64 -w /wheelhouse

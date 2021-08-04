@@ -1,6 +1,3 @@
-# Disclaimer
-This is fork of https://github.com/BerkeleyAutomation/python-fcl intented to be used in [ifcopenshell](https://github.com/IfcOpenShell/IfcOpenShell) / [BlenderBIM Add-on](https://blenderbim.org/) as orgininal repo is currently unactive and is not merging any PR.
-
 # python-fcl
 ### Python Interface for the Flexible Collision Library
 

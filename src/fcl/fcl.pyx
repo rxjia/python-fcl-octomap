@@ -759,11 +759,11 @@ cdef mat3d_to_numpy(defs.Matrix3d m):
                         [m(1,0), m(1,1), m(1,2)],
                         [m(2,0), m(2,1), m(2,2)]])
 
-cdef defs.Matrix3d numpy_to_mat3d(np.ndarray[double, ndim=2] a):
+cdef defs.Matrix3d numpy_to_mat3d(arr):
     # NOTE Eigen defaults to column-major storage,
     # which corresponds to non-default Fortran mode of ordering in numpy
-    cdef np.ndarray[double, ndim=2, mode='fortran'] f = np.ndarray.copy(a, order='F')
-    return defs.Matrix3d(&f[0, 0])
+    cdef double[:, :] memview = arr.astype(numpy.float64, order='F')
+    return defs.Matrix3d(&memview[0, 0])
 
 cdef c_to_python_collision_geometry(defs.const_CollisionGeometryd*geom, CollisionObject o1, CollisionObject o2):
     cdef CollisionGeometry o1_py_geom = <CollisionGeometry> ((<defs.CollisionObjectd*> o1.thisptr).getUserData())

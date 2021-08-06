@@ -750,8 +750,9 @@ cdef defs.Quaterniond numpy_to_quaternion3d(a):
 cdef vec3d_to_numpy(defs.Vector3d vec):
     return numpy.array([vec[0], vec[1], vec[2]])
 
-cdef defs.Vector3d numpy_to_vec3d(np.ndarray[double, ndim=1] a):
-    return defs.Vector3d(&a[0])
+cdef defs.Vector3d numpy_to_vec3d(arr):
+    cdef double[:] memview = arr.astype(numpy.float64)
+    return defs.Vector3d(&memview[0])
 
 cdef mat3d_to_numpy(defs.Matrix3d m):
     return numpy.array([[m(0,0), m(0,1), m(0,2)],
@@ -796,4 +797,3 @@ cdef copy_ptr_collision_object(defs.CollisionObjectd*cobj):
     co = CollisionObject(geom, _no_instance=True)
     (<CollisionObject> co).thisptr = cobj
     return co
-

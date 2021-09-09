@@ -22,9 +22,7 @@ jobs:
         path: ./wheelhouse/*.whl
     - name: Tag Version
       id: set_tag
-      run: |
-        export VER=$(python -c "exec(open('src/fcl/version.py','r').read());print(__version__)")
-        echo "::set-output name=tag_name::${VER}"
+      run: echo "FCL_VERSION=$(python -c \"exec(open('src/fcl/version.py','r').read());print(__version__)\")" >> $GITHUB_ENV
     - uses: xresloader/upload-to-github-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -33,7 +31,7 @@ jobs:
         overwrite: true
         draft: false
         update_latest_release: true
-        tag_name: ${{ steps.set_tag.outputs.tag_name }}
+        tag_name: ${{ env.FCL_VERSION }}
   upload_pypi:
     needs: [build_wheels]
     runs-on: ubuntu-latest

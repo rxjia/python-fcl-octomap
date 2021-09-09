@@ -1,6 +1,9 @@
-name: Release
+name: Release To Pypi
 
-on: release
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   build_wheels:
@@ -13,9 +16,15 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.0.0
+
     - uses: actions/upload-artifact@v2
       with:
         path: ./wheelhouse/*.whl
+    - name: Tag Version
+      id: set_tag
+      run: |
+        export VER=$(python -c "exec(open('src/fcl/version.py','r').read());print(__version__)")
+        echo "::set-output name=tag_name::${VER}"
     - uses: xresloader/upload-to-github-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -24,7 +33,7 @@ jobs:
         overwrite: true
         draft: false
         update_latest_release: true
-        tag_name: v0.6.1
+        tag_name: ${{ steps.set_tag.outputs.tag_name }}
   upload_pypi:
     needs: [build_wheels]
     runs-on: ubuntu-latest

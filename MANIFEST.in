@@ -1,5 +1,0 @@
-# Include the license
-include LICENSE
-include fcl/fcl_defs.pxd
-include fcl/octomap_defs.pxd
-include fcl/std_defs.pxd

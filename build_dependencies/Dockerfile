@@ -6,28 +6,16 @@
 # ln -sf requirements/Dockerfile .
 # docker build . -t pythonfcl
 
-FROM quay.io/pypa/manylinux1_x86_64:latest
-
-
-RUN yum install -y gcc 
-
-# install cmake 2.8.12
-COPY requirements/install_cmake.bash .
-RUN bash install_cmake.bash
-
-# clone FCL and libccd
-# the exact checkouts are in clone.bash
-COPY requirements/clone.bash .
-RUN bash clone.bash
+FROM quay.io/pypa/manylinux2010_x86_64:latest
 
 # build and install libccd and fcl using cmake
-COPY requirements/build.bash .
-RUN bash build.bash
+COPY build_dependencies/install_linux.sh .
+RUN bash install_linux.sh
 
 # manylinux includes a bunch of pythons
 # to test with others change this env variable
 #ENV PATH=/opt/python/cp27-cp27m/bin:$PATH
-ENV PATH=/opt/python/cp36-cp36m/bin:$PATH
+ENV PATH=/opt/python/cp39-cp39/bin:$PATH
 
 # we need numpy to build python-fcl
 # since we set our path we'll be using the right pip
@@ -35,4 +23,7 @@ RUN pip install numpy cython
 
 # build the python-fcl module
 COPY . /python_fcl
-RUN cd /python_fcl && python setup.py build_ext
+RUN pip wheel /python_fcl --no-deps -w wheelhouse/
+RUN pip install /python_fcl --no-index -f  /wheelhouse
+RUN ls /wheelhouse
+RUN auditwheel repair wheelhouse/python_fcl-0.6.1-cp39-cp39-linux_x86_64.whl --plat manylinux2010_x86_64 -w /wheelhouse

@@ -25,3 +25,15 @@ jobs:
         draft: false
         update_latest_release: true
         tag_name: v0.6.1
+  upload_pypi:
+    needs: [build_wheels]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@v1.4.2
+        with:
+          user: mmatl
+          password: ${{ secrets.PYPI_API_TOKEN }}

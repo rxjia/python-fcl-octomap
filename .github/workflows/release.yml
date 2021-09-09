@@ -22,10 +22,10 @@ jobs:
         path: ./wheelhouse/*.whl
     - name: Tag Version
       id: set_tag
-      if: matrix.os != 'windows-latest'
+      if: matrix.platform != 'windows-latest'
       run: echo "FCL_VERSION=$(python -c \"exec(open('src/fcl/version.py','r').read());print(__version__)\")" >> $GITHUB_ENV
     - name: Tag Version Windows
-      if: matrix.os == 'windows-latest'
+      if: matrix.platform == 'windows-latest'
       run: echo "FCL_VERSION=0.6.1" >> $GITHUB_ENV
     - uses: xresloader/upload-to-github-release@v1
       env:

@@ -6,9 +6,42 @@ on:
       - master
 
 jobs:
+  create_release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 2
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v5.1
+      - name: Tag Version
+        if: contains(steps.changed-files.outputs.modified_files, 'src/fcl/version.py')
+        id: set_tag
+        run: |
+          export VER=v$(python -c "exec(open('src/fcl/version.py','r').read());print(__version__)")
+          echo "::set-output name=tag_name::${VER}"
+      - name: Create Release
+        if: contains(steps.changed-files.outputs.modified_files, 'src/fcl/version.py')
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.set_tag.outputs.tag_name }}
+          release_name: ${{ steps.set_tag.outputs.tag_name }}
+          draft: false
+          prerelease: false
+    outputs:
+      mod_files: ${{ steps.changed-files.outputs.modified_files }}
+
   build_wheels:
+    if: contains(needs.create_release.outputs.mod_files, 'src/fcl/version.py')
     name: Build wheel on ${{matrix.platform}}
     runs-on: ${{matrix.platform}}
+    needs: create_release
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
@@ -27,7 +60,7 @@ jobs:
         overwrite: true
         draft: false
         update_latest_release: true
-        tag_name: 0.6.1
+
   upload_pypi:
     needs: [build_wheels]
     runs-on: ubuntu-latest

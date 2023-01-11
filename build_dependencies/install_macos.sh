@@ -1,9 +1,6 @@
-brew update > /dev/null
+# prevent brew from auto cleanup
+export HOMEBREW_NO_INSTALL_CLEANUP=1
 
-# brew install git
-# brew install cmake
-# brew install eigen
-# brew install libccd
 brew install fcl
 
 # mkdir -p deps

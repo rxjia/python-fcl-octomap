@@ -22,7 +22,7 @@ jobs:
         id: set_tag
         run: |
           export VER=v$(python -c "exec(open('src/fcl/version.py','r').read());print(__version__)")
-          echo echo "tag_name=${VER}" >> $GITHUB_OUTPUT
+          echo "tag_name=${VER}" >> $GITHUB_OUTPUT
       - name: Create Release
         if: contains(steps.changed-files.outputs.modified_files, 'src/fcl/version.py')
         id: create_release

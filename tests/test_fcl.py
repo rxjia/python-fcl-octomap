@@ -479,7 +479,9 @@ class TestFCL(unittest.TestCase):
         manager2.setup()
         manager2r.setup()
 
-        ddata = fcl.DistanceData(request=fcl.DistanceRequest(enable_nearest_points=True))
+        ddata = fcl.DistanceData(
+            request=fcl.DistanceRequest(enable_nearest_points=True)
+        )
         manager1.distance(manager2, ddata, fcl.defaultDistanceCallback)
         self.assertAlmostEqual(
             ddata.result.min_distance,
@@ -487,7 +489,9 @@ class TestFCL(unittest.TestCase):
             places=6,
         )
 
-        ddata = fcl.DistanceData(request=fcl.DistanceRequest(enable_nearest_points=True))
+        ddata = fcl.DistanceData(
+            request=fcl.DistanceRequest(enable_nearest_points=True)
+        )
         manager1.distance(manager2r, ddata, fcl.defaultDistanceCallback)
         self.assertAlmostEqual(
             ddata.result.min_distance,

@@ -128,7 +128,6 @@ class TestPrecision(unittest.TestCase):
         assert ret == -1
 
     def test_obj_obj_signed_distance(self):
-
         request = fcl.DistanceRequest(
             enable_nearest_points=True, enable_signed_distance=True
         )
@@ -166,7 +165,9 @@ class TestPrecision(unittest.TestCase):
         assert rdata.result.is_collision
 
     def test_mgr_obj_signed_distance(self):
-        req = fcl.DistanceRequest(enable_signed_distance=True, enable_nearest_points=True)
+        req = fcl.DistanceRequest(
+            enable_signed_distance=True, enable_nearest_points=True
+        )
         ddata = fcl.DistanceData(req)
         self.mgr1.distance(self.o2, ddata, fcl.defaultDistanceCallback)
         assert np.isclose(ddata.result.min_distance, self.act_dist)
@@ -175,7 +176,9 @@ class TestPrecision(unittest.TestCase):
             abs(ddata.result.min_distance),
         )
 
-        req = fcl.DistanceRequest(enable_signed_distance=True, enable_nearest_points=True)
+        req = fcl.DistanceRequest(
+            enable_signed_distance=True, enable_nearest_points=True
+        )
         ddata = fcl.DistanceData(req)
         self.mgr2.distance(self.o1, ddata, fcl.defaultDistanceCallback)
         assert np.isclose(ddata.result.min_distance, self.act_dist)
@@ -185,8 +188,9 @@ class TestPrecision(unittest.TestCase):
         )
 
     def test_mgr_mgr_signed_distance(self):
-
-        req = fcl.DistanceRequest(enable_signed_distance=True, enable_nearest_points=True)
+        req = fcl.DistanceRequest(
+            enable_signed_distance=True, enable_nearest_points=True
+        )
         ddata = fcl.DistanceData(req)
         self.mgr1.distance(self.mgr2, ddata, fcl.defaultDistanceCallback)
         assert np.isclose(ddata.result.min_distance, self.act_dist)
@@ -195,7 +199,9 @@ class TestPrecision(unittest.TestCase):
             abs(ddata.result.min_distance),
         )
 
-        req = fcl.DistanceRequest(enable_signed_distance=True, enable_nearest_points=True)
+        req = fcl.DistanceRequest(
+            enable_signed_distance=True, enable_nearest_points=True
+        )
         ddata = fcl.DistanceData(req)
         self.mgr2.distance(self.mgr1, ddata, fcl.defaultDistanceCallback)
         assert np.isclose(ddata.result.min_distance, self.act_dist)

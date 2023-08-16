@@ -128,7 +128,6 @@ class TestPrecision(unittest.TestCase):
         assert ret == -1
 
     def test_obj_obj_signed_distance(self):
-
         request = fcl.DistanceRequest(
             enable_nearest_points=True, enable_signed_distance=True
         )
@@ -185,7 +184,6 @@ class TestPrecision(unittest.TestCase):
         )
 
     def test_mgr_mgr_signed_distance(self):
-
         req = fcl.DistanceRequest(enable_signed_distance=True, enable_nearest_points=True)
         ddata = fcl.DistanceData(req)
         self.mgr1.distance(self.mgr2, ddata, fcl.defaultDistanceCallback)

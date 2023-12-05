@@ -3,9 +3,96 @@ requires = [
 	"setuptools",
 	"wheel",
 	"Cython<3.0",
-	"oldest-supported-numpy; python_version<'3.12'",
+	"numpy; python_version<'3.12'",
 	"numpy>=1.26.0b1; python_version>='3.12'"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-fcl"
+description = "Python bindings for the Flexible Collision Library"
+requires-python = ">=3.7"
+authors = [
+    {name = "Jelle Feringa", email = "jelleferinga@gmail.com"},
+    {name = "Matthew Matl", email = "mmatl@eecs.berkeley.edu"},
+    {name = "Shirokuma", email = "rootstock_acg@yahoo.co.jp"},
+    {name = "Michael Dawson-Haggerty"},
+    {name = "See contributor list"},
+]
+maintainers = [{name = "Matthew Matl", email = "mmatl@eecs.berkeley.edu"}]
+license = {text = "BSD"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+keywords = ["fcl collision distance"]
+dependencies = [
+    "numpy; python_version<'3.12'",
+    "numpy>=1.26.0b1; python_version>='3.12'",
+    "Cython",
+]
+dynamic = ["version"]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+Homepage = "https://github.com/berkeleyautomation/python-fcl"
+
+
+
+
+[tool.setuptools]
+include-package-data = true
+package-dir = {"" = "src"}
+license-files = ["LICENSE"]
+
+[tool.setuptools.package-data]
+"*" = ["*.pyx", "*.pxd", "*.dll"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.setuptools.dynamic]
+version = {attr = "fcl.__version__"}
+
+[tool.ruff]
+target-version = "py37"
+# See https://github.com/charliermarsh/ruff#rules for error code definitions.
+select = [
+    "B", # bugbear
+    "C", # comprehensions
+    "E", # style errors
+    "F", # flakes
+    "I", # import sorting
+    "RUF100", # meta
+    "U", # upgrade
+    "W", # style warnings
+    "YTT", # sys.version
+]
+
+ignore = [
+  "C901", # Comprehension is too complex (11 > 10)
+  "N802", # Function name should be lowercase
+  "N806", # Variable in function should be lowercase
+  "E501", # Line too long ({width} > {limit} characters)
+  "B904", # raise ... from err
+  "B905", # zip() without an explicit strict= parameter
+]
+line-length = 90
+
 
 [tool.cibuildwheel]
 skip = ["pp*", "*musllinux*"]
@@ -18,7 +105,9 @@ archs = ["x86_64"]
 
 [tool.cibuildwheel.macos]
 before-all = "bash build_dependencies/install_macos.sh"
+archs = ["x86_64"]
 
 [tool.cibuildwheel.windows]
 before-all = "powershell build_dependencies\\install_windows.ps1"
 archs = ["AMD64"]
+

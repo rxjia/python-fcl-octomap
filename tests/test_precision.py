@@ -1,8 +1,7 @@
 import unittest
 
-import numpy as np
-
 import fcl
+import numpy as np
 
 
 # These test cases were added because there was a very sneaky crash that would occur

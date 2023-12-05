@@ -1,8 +1,7 @@
 import unittest
 
-import numpy as np
-
 import fcl
+import numpy as np
 
 
 class TestFCL(unittest.TestCase):

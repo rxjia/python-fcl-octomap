@@ -1,28 +1,27 @@
-import numpy as np
-
 import fcl
+import numpy as np
 
 
 def print_collision_result(o1_name, o2_name, result):
-    print("Collision between {} and {}:".format(o1_name, o2_name))
+    print(f"Collision between {o1_name} and {o2_name}:")
     print("-" * 30)
-    print("Collision?: {}".format(result.is_collision))
-    print("Number of contacts: {}".format(len(result.contacts)))
+    print(f"Collision?: {result.is_collision}")
+    print(f"Number of contacts: {len(result.contacts)}")
     print("")
 
 
 def print_continuous_collision_result(o1_name, o2_name, result):
-    print("Continuous collision between {} and {}:".format(o1_name, o2_name))
+    print(f"Continuous collision between {o1_name} and {o2_name}:")
     print("-" * 30)
-    print("Collision?: {}".format(result.is_collide))
-    print("Time of collision: {}".format(result.time_of_contact))
+    print(f"Collision?: {result.is_collide}")
+    print(f"Time of collision: {result.time_of_contact}")
     print("")
 
 
 def print_distance_result(o1_name, o2_name, result):
-    print("Distance between {} and {}:".format(o1_name, o2_name))
+    print(f"Distance between {o1_name} and {o2_name}:")
     print("-" * 30)
-    print("Distance: {}".format(result.min_distance))
+    print(f"Distance: {result.min_distance}")
     print("Closest Points:")
     print(result.nearest_points[0])
     print(result.nearest_points[1])
@@ -166,12 +165,12 @@ manager3.setup()
 # =====================================================================
 cdata = fcl.CollisionData()
 manager1.collide(cdata, fcl.defaultCollisionCallback)
-print("Collision within manager 1?: {}".format(cdata.result.is_collision))
+print(f"Collision within manager 1?: {cdata.result.is_collision}")
 print("")
 
 cdata = fcl.CollisionData()
 manager2.collide(cdata, fcl.defaultCollisionCallback)
-print("Collision within manager 2?: {}".format(cdata.result.is_collision))
+print(f"Collision within manager 2?: {cdata.result.is_collision}")
 print("")
 
 # =====================================================================
@@ -179,12 +178,12 @@ print("")
 # =====================================================================
 ddata = fcl.DistanceData()
 manager1.distance(ddata, fcl.defaultDistanceCallback)
-print("Closest distance within manager 1?: {}".format(ddata.result.min_distance))
+print(f"Closest distance within manager 1?: {ddata.result.min_distance}")
 print("")
 
 ddata = fcl.DistanceData()
 manager2.distance(ddata, fcl.defaultDistanceCallback)
-print("Closest distance within manager 2?: {}".format(ddata.result.min_distance))
+print(f"Closest distance within manager 2?: {ddata.result.min_distance}")
 print("")
 
 # =====================================================================
@@ -194,10 +193,10 @@ req = fcl.CollisionRequest(num_max_contacts=100, enable_contact=True)
 rdata = fcl.CollisionData(request=req)
 
 manager1.collide(fcl.CollisionObject(mesh), rdata, fcl.defaultCollisionCallback)
-print("Collision between manager 1 and Mesh?: {}".format(rdata.result.is_collision))
+print(f"Collision between manager 1 and Mesh?: {rdata.result.is_collision}")
 print("Contacts:")
 for c in rdata.result.contacts:
-    print("\tO1: {}, O2: {}".format(c.o1, c.o2))
+    print(f"\tO1: {c.o1}, O2: {c.o2}")
 print("")
 
 # =====================================================================
@@ -205,8 +204,8 @@ print("")
 # =====================================================================
 rdata = fcl.CollisionData(request=req)
 manager3.collide(manager2, rdata, fcl.defaultCollisionCallback)
-print("Collision between manager 2 and manager 3?: {}".format(rdata.result.is_collision))
+print(f"Collision between manager 2 and manager 3?: {rdata.result.is_collision}")
 print("Contacts:")
 for c in rdata.result.contacts:
-    print("\tO1: {}, O2: {}".format(c.o1, c.o2))
+    print(f"\tO1: {c.o1}, O2: {c.o2}")
 print("")

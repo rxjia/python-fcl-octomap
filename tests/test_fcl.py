@@ -205,7 +205,7 @@ class TestFCL(unittest.TestCase):
             self.geometry["cone"], fcl.Transform(np.array([0.0, 0.0, -2.0]))
         )
 
-        ret = fcl.continuousCollide(
+        _ret = fcl.continuousCollide(
             box, fcl.Transform(), cone, fcl.Transform(), request, result
         )
 

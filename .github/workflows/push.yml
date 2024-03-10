@@ -1,6 +1,6 @@
-name: Build
+name: Build Pull Requests
 
-on: [push, pull_request, workflow_dispatch]
+on: [pull_request]
 
 jobs:
   formatting:
@@ -12,7 +12,7 @@ jobs:
       - name: Set up Python environment
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.12"
       - name: ruff
         run: |
           pip install ruff

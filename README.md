@@ -1,4 +1,8 @@
 # python-fcl
+```
+conda install fcl cython -c conda-forge
+pip install .
+```
 ### Python Interface for the Flexible Collision Library
 
 Python-FCL is an (unofficial) Python interface for the [Flexible Collision Library (FCL)](https://github.com/flexible-collision-library/fcl),
